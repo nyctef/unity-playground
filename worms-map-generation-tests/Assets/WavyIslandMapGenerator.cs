@@ -289,6 +289,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
 
     void OnDrawGizmos()
     {
+        Gizmos.matrix = transform.localToWorldMatrix;
+
         if (_map != null)
         {
             for (int x = 0; x < Width; x++)
