@@ -319,10 +319,10 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
-        var Left = -Width / 2;
-        var Bottom = -Height / 2;
-        var Right = Width / 2;
-        var Top = Height / 2;
+        var Left = 1 + -Width / 2;
+        var Bottom = 1 + -Height / 2;
+        var Right = 1 + Width / 2;
+        var Top = 1 + Height / 2;
 
         // ref: https://en.wikipedia.org/wiki/Marching_squares
         for (int mapZ = 0; mapZ < sz - 1; mapZ++)
@@ -345,20 +345,21 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                 var cellTopInner = new Vector3(Left + mapX, 1, Bottom + mapZ + 0.5f);
                 var cellTopOuter = new Vector3(Left + mapX, 0, Bottom + mapZ + 0.5f);
 
-                // TODO: make sure normals are correct + check if vertex ordering is important
-
+                // +8  +4
+                //
+                // +1  +2
                 switch (cell)
                 {
                     case 0: // 0b0000:
                         break;
                     case 1: // 0b0001:
-                        BuildQuad(vertices, triangles, cellBottomInner, cellBottomOuter, cellLeftOuter, cellLeftInner);
+                        BuildQuad(vertices, triangles, cellBottomInner, cellLeftInner, cellLeftOuter, cellBottomOuter);
                         break;
                     case 2: // 0b0010:
-                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellBottomOuter, cellBottomInner);
+                        BuildQuad(vertices, triangles, cellBottomInner, cellBottomOuter, cellRightOuter, cellRightInner);
                         break;
                     case 3: // 0b0011:
-                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellLeftOuter, cellLeftInner);
+                        BuildQuad(vertices, triangles, cellRightInner, cellLeftInner, cellLeftOuter, cellRightOuter);
                         break;
                     case 4: // 0b0100:
                         BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellTopOuter, cellTopInner);
@@ -368,13 +369,13 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                         BuildQuad(vertices, triangles, cellLeftInner, cellLeftOuter, cellTopOuter, cellTopInner);
                         break;
                     case 6: // 0b0110:
-                        BuildQuad(vertices, triangles, cellTopInner, cellTopOuter, cellBottomOuter, cellBottomInner);
+                        BuildQuad(vertices, triangles, cellTopInner, cellBottomInner, cellBottomOuter, cellTopOuter);
                         break;
                     case 7: // 0b0111:
                         BuildQuad(vertices, triangles, cellLeftInner, cellLeftOuter, cellTopOuter, cellTopInner);
                         break;
                     case 8: // 0b1000:
-                        BuildQuad(vertices, triangles, cellLeftInner, cellLeftOuter, cellTopOuter, cellTopInner);
+                        BuildQuad(vertices, triangles, cellLeftInner, cellTopInner, cellTopOuter, cellLeftOuter);
                         break;
                     case 9: // 0b1001:
                         BuildQuad(vertices, triangles, cellTopInner, cellTopOuter, cellBottomOuter, cellBottomInner);
@@ -384,7 +385,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                         BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellTopOuter, cellTopInner);
                         break;
                     case 11: // 0b1011:
-                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellTopOuter, cellTopInner);
+                        BuildQuad(vertices, triangles, cellRightInner, cellTopInner, cellTopOuter, cellRightOuter);
                         break;
                     case 12: // 0b1100:
                         BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellLeftOuter, cellLeftInner);
