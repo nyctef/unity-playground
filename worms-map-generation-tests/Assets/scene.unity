@@ -187,6 +187,7 @@ GameObject:
   m_Component:
   - component: {fileID: 938151572}
   - component: {fileID: 938151571}
+  - component: {fileID: 938151573}
   m_Layer: 0
   m_Name: Map Generator
   m_TagString: Untagged
@@ -200,7 +201,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 938151570}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 995f3e1560438ba42b580d9ce63a3a77, type: 3}
   m_Name: 
@@ -210,6 +211,7 @@ MonoBehaviour:
   Seed: 1234
   UseRandomSeed: 1
   RandomFillPercent: 45
+  AnimationDelay: 0.25
 --- !u!4 &938151572
 Transform:
   m_ObjectHideFlags: 0
@@ -223,6 +225,24 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &938151573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 938151570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0137edb28697c104aaa0f2ca6dba52df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Width: 128
+  Height: 128
+  Seed: 1234
+  UseRandomSeed: 1
+  PerlinThreshold: 0.2
+  PerlinScale: 0.1
+  AnimationDelay: 0.25
 --- !u!1 &2133676418
 GameObject:
   m_ObjectHideFlags: 0
