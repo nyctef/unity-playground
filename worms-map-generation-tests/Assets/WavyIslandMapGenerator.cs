@@ -54,17 +54,22 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         Debug.Log("fill map");
         RandomFillMap(ref _map);
 
-        if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay*3); }
+        if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
 
         Debug.Log("threshold map");
         ThresholdMap(ref _map);
 
         if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
 
-        var tmpMap = (byte[,])_map.Clone();
+        var tmpMap = new byte[Width, Height];
 
         Debug.Log("pick islands");
         PickIslands(ref _map, ref tmpMap);
+
+        if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+
+        Debug.Log("dilate");
+        Dilate(ref _map, ref tmpMap, 128);
 
         Debug.Log("done");
     }
@@ -117,12 +122,19 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     void PickIslands(ref byte[,] map, ref byte[,] tmpMap)
     {
         var firstLineHeight = 12;
-        for (var x = 0; x<Width; x++)
+        for (var x = 0; x < Width; x++)
         {
             FloodFill(map, tmpMap, 255, 128, x, firstLineHeight);
         }
 
+        Swap(ref map, ref tmpMap);
+    }
+
+    private static void Swap(ref byte[,] map, ref byte[,] tmpMap)
+    {
+        var swap = map;
         map = tmpMap;
+        tmpMap = swap;
     }
 
     private struct Coordinate
@@ -150,12 +162,12 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         }
         if (sourceMap[startx, starty] != sourceValue)
         {
-            Debug.Log("FloodFill sourceMap at " + startx + "," + starty + " is not " + sourceValue);
+            //Debug.Log("FloodFill sourceMap at " + startx + "," + starty + " is not " + sourceValue);
             return;
         }
         if (targetMap[startx,starty] == targetValue)
         {
-            Debug.Log("FloodFill targetMap at " + startx + "," + starty + " is already " + targetValue);
+            //Debug.Log("FloodFill targetMap at " + startx + "," + starty + " is already " + targetValue);
             return;
         }
 
@@ -186,6 +198,47 @@ public class WavyIslandMapGenerator : MonoBehaviour {
             targetMap[x, y] = targetValue;
             q.Enqueue(Coord(x, y));
         }
+    }
+
+    void Dilate(ref byte[,] map, ref byte[,] tmpMap, byte targetValue)
+    {
+        for (int x = 0; x < Width; x++)
+            for (int y = 0; y < Height; y++)
+            {
+                var neighbourWallTiles = GetSurroundingWallCount(map, x, y, targetValue);
+                if (neighbourWallTiles > 1)
+                {
+                    tmpMap[x, y] = targetValue;
+                }
+                else
+                {
+                    tmpMap[x, y] = map[x, y];
+                }
+            }
+
+        Swap(ref map, ref tmpMap);
+    }
+
+    int GetSurroundingWallCount(byte[,] map, int x, int y, byte targetValue)
+    {
+        int wallCount = 0;
+        for (int nX = x - 1; nX <= x + 1; nX++)
+            for (int nY = y - 1; nY <= y + 1; nY++)
+            {
+                if (nX == nY)
+                {
+                    continue;
+                }
+                if (nX < 0 || nX >= Width || nY < 0 || nY >= Height)
+                {
+                    if (nY < 0) { wallCount++; }
+                }
+                else
+                {
+                    wallCount += map[nX, nY] == targetValue ? 1 : 0;
+                }
+            }
+        return wallCount;
     }
 
     void OnDrawGizmos()
