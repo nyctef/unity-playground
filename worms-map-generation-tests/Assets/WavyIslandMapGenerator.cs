@@ -13,19 +13,24 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     public int Width = 512;
     public int Height = 128;
 
+    [Header("Generation settings")]
+
     public int Seed;
     public bool UseRandomSeed = true;
 
     [Range(0.01f, 0.99f)] public float PerlinThreshold = 0.2f;
     [Range(0.01f, 0.2f)] public float PerlinScale = 0.05f;
 
-    [Range(0.0f, 1f)] public float AnimationDelay = 0.25f;
-    public bool ShowAnimation { get { return AnimationDelay > 0.0f; } }
-
     [Range(0,5)]
     public int DilatePasses = 3;
     [Range(0,5)]
     public int SmoothPasses = 3;
+
+    [Header("Generation animation settings")]
+
+    [Range(0.0f, 1f)] public float AnimationDelay = 0.25f;
+    public bool ShowNoiseGeneration = true;
+    public bool ShowMeshGeneration = true;
 
     private byte[,] _map;
 
@@ -54,31 +59,31 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         Debug.Log("map create");
         _map = new byte[Width, Height];
 
-        if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+        if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
 
         Debug.Log("fill map");
         RandomFillMap(ref _map);
 
-        if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+        if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
 
         Debug.Log("threshold map");
         ThresholdMap(ref _map);
 
-        if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+        if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
 
         var tmpMap = new byte[Width, Height];
 
         Debug.Log("pick islands");
         PickIslands(ref _map, ref tmpMap);
 
-        if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+        if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
 
         for (int i = 0; i < DilatePasses; i++)
         {
             Debug.Log("dilate");
             Dilate(ref _map, ref tmpMap, 128);
 
-            if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+            if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
         }
 
         for (int i = 0; i < SmoothPasses; i++)
@@ -86,7 +91,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
             Debug.Log("smooth");
             Smooth(ref _map, ref tmpMap, 128);
 
-            if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+            if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
         }
 
         Debug.Log("done");
@@ -292,7 +297,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                     var color = ((float)_map[x, y]) / 255f;
                     Gizmos.color = new Color(color, color, color);
                     var pos = new Vector3(-Width / 2 + x + .5f, 0, -Height / 2 + y + .5f);
-                    Gizmos.DrawCube(pos, Vector3.one);
+                    Gizmos.DrawCube(pos, Vector3.one / 2);
                 }
         }
         else
