@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Networking.NetworkSystem;
 using Random = System.Random;
 
+[RequireComponent(typeof(MeshFilter))]
 public class WavyIslandMapGenerator : MonoBehaviour {
 
     public int Width = 512;
@@ -92,6 +93,23 @@ public class WavyIslandMapGenerator : MonoBehaviour {
             Smooth(ref _map, ref tmpMap, 128);
 
             if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
+        }
+
+        var mesh = new Mesh();
+
+        Debug.Log("Writing map to mesh");
+        WriteMapToMesh(_map, mesh);
+
+        var meshFilter = GetComponent<MeshFilter>();
+        if (meshFilter != null)
+        {
+            meshFilter.mesh = mesh;
+        }
+
+        var meshCollider = GetComponent<MeshCollider>();
+        if (meshCollider != null)
+        {
+            meshCollider.sharedMesh = mesh;
         }
 
         Debug.Log("done");
@@ -285,6 +303,122 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                 }
             }
         return wallCount;
+    }
+
+    private bool IsSolidAt(byte[,] mapData, int sx, int x, int y)
+    {
+        return mapData[x, y] > 0;
+    }
+
+    private void WriteMapToMesh(byte[,] map, Mesh mesh)
+    {
+        var sx = Width;
+        //auto sy = (int32)Size.Y;
+        var sz = Height;
+
+        var vertices = new List<Vector3>();
+        var triangles = new List<int>();
+
+        var Left = -Width / 2;
+        var Bottom = -Height / 2;
+        var Right = Width / 2;
+        var Top = Height / 2;
+
+        // ref: https://en.wikipedia.org/wiki/Marching_squares
+        for (int mapZ = 0; mapZ < sz - 1; mapZ++)
+        {
+            for (int mapX = 0; mapX < sx - 1; mapX++)
+            {
+                var cell = 0;
+
+                if (IsSolidAt(map, sx, mapX, mapZ)) { cell += 1; }
+                if (IsSolidAt(map, sx, mapX + 1, mapZ)) { cell += 2; }
+                if (IsSolidAt(map, sx, mapX + 1, mapZ + 1)) { cell += 4; }
+                if (IsSolidAt(map, sx, mapX, mapZ + 1)) { cell += 8; }
+
+                var cellLeftInner = new Vector3(Left + mapX - 0.5f, 1, Bottom + mapZ);
+                var cellLeftOuter = new Vector3(Left + mapX - 0.5f, 0, Bottom + mapZ);
+                var cellBottomInner = new Vector3(Left + mapX, 1, Bottom + mapZ - 0.5f);
+                var cellBottomOuter = new Vector3(Left + mapX, 0, Bottom + mapZ - 0.5f);
+                var cellRightInner = new Vector3(Left + mapX + 0.5f, 1, Bottom + mapZ);
+                var cellRightOuter = new Vector3(Left + mapX + 0.5f, 0, Bottom + mapZ);
+                var cellTopInner = new Vector3(Left + mapX, 1, Bottom + mapZ + 0.5f);
+                var cellTopOuter = new Vector3(Left + mapX, 0, Bottom + mapZ + 0.5f);
+
+                // TODO: make sure normals are correct + check if vertex ordering is important
+
+                switch (cell)
+                {
+                    case 0: // 0b0000:
+                        break;
+                    case 1: // 0b0001:
+                        BuildQuad(vertices, triangles, cellBottomInner, cellBottomOuter, cellLeftOuter, cellLeftInner);
+                        break;
+                    case 2: // 0b0010:
+                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellBottomOuter, cellBottomInner);
+                        break;
+                    case 3: // 0b0011:
+                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellLeftOuter, cellLeftInner);
+                        break;
+                    case 4: // 0b0100:
+                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellTopOuter, cellTopInner);
+                        break;
+                    case 5: // 0b0101:
+                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellBottomOuter, cellBottomInner);
+                        BuildQuad(vertices, triangles, cellLeftInner, cellLeftOuter, cellTopOuter, cellTopInner);
+                        break;
+                    case 6: // 0b0110:
+                        BuildQuad(vertices, triangles, cellTopInner, cellTopOuter, cellBottomOuter, cellBottomInner);
+                        break;
+                    case 7: // 0b0111:
+                        BuildQuad(vertices, triangles, cellLeftInner, cellLeftOuter, cellTopOuter, cellTopInner);
+                        break;
+                    case 8: // 0b1000:
+                        BuildQuad(vertices, triangles, cellLeftInner, cellLeftOuter, cellTopOuter, cellTopInner);
+                        break;
+                    case 9: // 0b1001:
+                        BuildQuad(vertices, triangles, cellTopInner, cellTopOuter, cellBottomOuter, cellBottomInner);
+                        break;
+                    case 10:// 0b1010:
+                        BuildQuad(vertices, triangles, cellBottomInner, cellBottomOuter, cellLeftOuter, cellLeftInner);
+                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellTopOuter, cellTopInner);
+                        break;
+                    case 11: // 0b1011:
+                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellTopOuter, cellTopInner);
+                        break;
+                    case 12: // 0b1100:
+                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellLeftOuter, cellLeftInner);
+                        break;
+                    case 13: // 0b1101:
+                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellBottomOuter, cellBottomInner);
+                        break;
+                    case 14: // 0b1110:
+                        BuildQuad(vertices, triangles, cellBottomInner, cellBottomOuter, cellLeftOuter, cellLeftInner);
+                        break;
+                    case 15: // 0b1111:
+                        break;
+                }
+            }
+        }
+
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangles.ToArray();
+        mesh.RecalculateNormals();
+    }
+
+    private void BuildQuad(List<Vector3> vertices, List<int> triangles, Vector3 bottomLeft, Vector3 bottomRight, Vector3 topRight, Vector3 topLeft)
+    {
+        int index = vertices.Count - 1;
+        vertices.Add(bottomLeft);
+        vertices.Add(bottomRight);
+        vertices.Add(topRight);
+        vertices.Add(topLeft);
+        triangles.Add(index + 1);
+        triangles.Add(index + 2);
+        triangles.Add(index + 3);
+        triangles.Add(index + 1);
+        triangles.Add(index + 3);
+        triangles.Add(index + 4);
     }
 
     void OnDrawGizmos()
