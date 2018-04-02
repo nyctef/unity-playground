@@ -31,7 +31,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
 
     [Range(0.0f, 1f)] public float AnimationDelay = 0.25f;
     public bool ShowNoiseGeneration = true;
-    public bool ShowMeshGeneration = true;
+    //public bool ShowMeshGeneration = true;
 
     private byte[,] _map;
 
