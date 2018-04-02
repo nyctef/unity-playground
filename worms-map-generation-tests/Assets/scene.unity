@@ -240,8 +240,8 @@ MonoBehaviour:
   Height: 128
   Seed: 1234
   UseRandomSeed: 1
-  PerlinThreshold: 0.2
-  PerlinScale: 0.1
+  PerlinThreshold: 0.1
+  PerlinScale: 0.08
   AnimationDelay: 0.25
 --- !u!1 &2133676418
 GameObject:

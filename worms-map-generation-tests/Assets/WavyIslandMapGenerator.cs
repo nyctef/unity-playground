@@ -16,7 +16,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     public bool UseRandomSeed = true;
 
     [Range(0.01f, 0.99f)] public float PerlinThreshold = 0.2f;
-    [Range(0.1f, 10)] public float PerlinScale = 0.1f;
+    [Range(0.01f, 0.2f)] public float PerlinScale = 0.1f;
 
     [Range(0.0f, 1f)] public float AnimationDelay = 0.25f;
     public bool ShowAnimation { get { return AnimationDelay > 0.0f; } }
