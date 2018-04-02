@@ -59,16 +59,6 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         ThresholdMap(ref _map);
 
         if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
-
-        var tmpMap = (byte[,])_map.Clone();
-
-        for (int i = 0; i < 5; i++)
-        {
-            Debug.Log("smooth map");
-            SmoothMap(ref _map, ref tmpMap);
-
-            if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
-        }
     }
 
     void RandomFillMap(ref byte[,] map)
@@ -114,51 +104,6 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                     _map[x, y] = 0;
                 }
             }
-    }
-
-    void SmoothMap(ref byte[,] map, ref byte[,] tmpMap)
-    {
-        for (int x = 0; x < Width; x++)
-            for (int y = 0; y < Height; y++)
-            {
-                var neighbourWallTiles = GetSurroundingWallCount(map, x, y);
-                if (neighbourWallTiles > 4)
-                {
-                    tmpMap[x, y] = 255;
-                }
-                else if (neighbourWallTiles < 4)
-                {
-                    tmpMap[x, y] = 0;
-                }
-                else
-                {
-                    tmpMap[x, y] = map[x, y];
-                }
-            }
-
-        map = tmpMap;
-    }
-
-    int GetSurroundingWallCount(byte[,] map, int x, int y)
-    {
-        int wallCount = 0;
-        for (int nX = x - 1; nX <= x + 1; nX++)
-            for (int nY = y - 1; nY <= y + 1; nY++)
-            {
-                if (nX == nY)
-                {
-                    continue;
-                }
-                if (nX < 0 || nX >= Width || nY < 0 || nY >= Height)
-                {
-                    if (nY < 0) { wallCount++; }
-                }
-                else
-                {
-                    wallCount += map[nX, nY] == 255 ? 1 : 0;
-                }
-            }
-        return wallCount;
     }
 
     void OnDrawGizmos()
