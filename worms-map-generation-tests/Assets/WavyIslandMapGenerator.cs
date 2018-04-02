@@ -294,6 +294,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
             for (int x = 0; x < Width; x++)
                 for (int y = 0; y < Height; y++)
                 {
+                    if (_map[x,y] == 0) { continue; }
+
                     var color = ((float)_map[x, y]) / 255f;
                     Gizmos.color = new Color(color, color, color);
                     var pos = new Vector3(-Width / 2 + x + .5f, 0, -Height / 2 + y + .5f);
