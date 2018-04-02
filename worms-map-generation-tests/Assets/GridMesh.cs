@@ -2,7 +2,7 @@
 using System.Collections;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-public class Grid : MonoBehaviour
+public class GridMesh : MonoBehaviour
 {
     public int Width = 10, Height = 5;
 
