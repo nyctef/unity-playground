@@ -82,7 +82,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         {
             if (y == 0)
             {
-                map[x, y] = 1;
+                map[x, y] = 255;
             }
             else
             {
