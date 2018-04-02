@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Networking.NetworkSystem;
 using Random = System.Random;
 
-public class MapGenerator : MonoBehaviour
+public class CavesMapGenerator : MonoBehaviour
 {
     public int Width = 128;
     public int Height = 128;
