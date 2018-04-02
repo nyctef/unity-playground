@@ -324,7 +324,7 @@ MonoBehaviour:
   Width: 512
   Height: 128
   Seed: 0
-  UseRandomSeed: 1
+  UseRandomSeed: 0
   PerlinThreshold: 0.2
   PerlinScale: 0.05
   DilatePasses: 3
