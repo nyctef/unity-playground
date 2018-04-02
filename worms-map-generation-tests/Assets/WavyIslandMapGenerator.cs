@@ -10,7 +10,7 @@ using Random = System.Random;
 
 public class WavyIslandMapGenerator : MonoBehaviour {
 
-    public int Width = 128;
+    public int Width = 512;
     public int Height = 128;
 
     public int Seed;
@@ -21,6 +21,11 @@ public class WavyIslandMapGenerator : MonoBehaviour {
 
     [Range(0.0f, 1f)] public float AnimationDelay = 0.25f;
     public bool ShowAnimation { get { return AnimationDelay > 0.0f; } }
+
+    [Range(0,5)]
+    public int DilatePasses = 1;
+    [Range(0,5)]
+    public int SmoothPasses = 3;
 
     private byte[,] _map;
 
@@ -68,8 +73,21 @@ public class WavyIslandMapGenerator : MonoBehaviour {
 
         if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
 
-        Debug.Log("dilate");
-        Dilate(ref _map, ref tmpMap, 128);
+        for (int i = 0; i < DilatePasses; i++)
+        {
+            Debug.Log("dilate");
+            Dilate(ref _map, ref tmpMap, 128);
+
+            if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+        }
+
+        for (int i = 0; i < SmoothPasses; i++)
+        {
+            Debug.Log("smooth");
+            Smooth(ref _map, ref tmpMap, 128);
+
+            if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+        }
 
         Debug.Log("done");
     }
@@ -209,6 +227,29 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                 if (neighbourWallTiles > 1)
                 {
                     tmpMap[x, y] = targetValue;
+                }
+                else
+                {
+                    tmpMap[x, y] = map[x, y];
+                }
+            }
+
+        Swap(ref map, ref tmpMap);
+    }
+
+    void Smooth(ref byte[,] map, ref byte[,] tmpMap, byte targetValue)
+    {
+        for (int x = 0; x < Width; x++)
+            for (int y = 0; y < Height; y++)
+            {
+                var neighbourWallTiles = GetSurroundingWallCount(map, x, y, targetValue);
+                if (neighbourWallTiles > 4)
+                {
+                    tmpMap[x, y] = targetValue;
+                }
+                else if (neighbourWallTiles < 4)
+                {
+                    tmpMap[x, y] = 0;
                 }
                 else
                 {

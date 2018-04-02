@@ -236,13 +236,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0137edb28697c104aaa0f2ca6dba52df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Width: 128
+  Width: 512
   Height: 128
-  Seed: 1234
+  Seed: 119720
   UseRandomSeed: 1
-  PerlinThreshold: 0.1
-  PerlinScale: 0.08
-  AnimationDelay: 0.25
+  PerlinThreshold: 0.2
+  PerlinScale: 0.05
+  AnimationDelay: 0.385
+  DilatePasses: 3
+  SmoothPasses: 3
 --- !u!1 &2133676418
 GameObject:
   m_ObjectHideFlags: 0
