@@ -42,7 +42,7 @@ public class CavesMapGenerator : MonoBehaviour
             Seed = Time.time.ToString(CultureInfo.InvariantCulture);
         }
 
-        Debug.Log("GenerateMap with seed "+Seed, this);
+        Debug.Log("CavesMapGenerator GenerateMap with seed " + Seed, this);
 
         _map = new int[Width, Height];
 

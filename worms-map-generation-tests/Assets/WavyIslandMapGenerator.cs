@@ -12,10 +12,11 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     public int Width = 128;
     public int Height = 128;
 
-    public string Seed;
-    public bool UseRandomSeed;
+    public int Seed;
+    public bool UseRandomSeed = true;
 
-    [Range(0, 100)] public int RandomFillPercent = 45;
+    [Range(0.01f, 0.99f)] public float PerlinThreshold = 0.5f;
+    [Range(0.1f, 10)] public float PerlinScale = 0.1f;
 
     [Range(0.0f, 1f)] public float AnimationDelay = 0.25f;
     public bool ShowAnimation { get { return AnimationDelay > 0.0f; } }
@@ -39,19 +40,18 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     {
         if (UseRandomSeed)
         {
-            Seed = Time.time.ToString(CultureInfo.InvariantCulture);
+            Seed = (int)(Time.time * 1000);
         }
 
-        Debug.Log("GenerateMap with seed " + Seed, this);
+        Debug.Log("WavyIslandMapGenerator GenerateMap with seed " + Seed, this);
 
         _map = new int[Width, Height];
 
+        if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+
         RandomFillMap(ref _map);
 
-        if (ShowAnimation)
-        {
-            yield return new WaitForSeconds(AnimationDelay);
-        }
+        if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
 
         var tmpMap = (int[,])_map.Clone();
 
@@ -59,29 +59,28 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         {
             SmoothMap(ref _map, ref tmpMap);
 
-            if (ShowAnimation)
-            {
-                yield return new WaitForSeconds(AnimationDelay);
-            }
+            if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
         }
     }
 
     void RandomFillMap(ref int[,] map)
     {
-        var rng = new Random(Seed.GetHashCode());
+        int perlinSeed = new Random(Seed).Next();
+        int perlinXOffset = perlinSeed & 0xFF;
+        int perlinYOffset = perlinSeed >> 15;
 
         for (int x = 0; x < Width; x++)
-            for (int y = 0; y < Height; y++)
+        for (int y = 0; y < Height; y++)
+        {
+            if (y == 0)
             {
-                if (x == 0 || x == Width - 1 || y == 0 || y == Height - 1)
-                {
-                    map[x, y] = 1;
-                }
-                else
-                {
-                    map[x, y] = rng.Next(0, 100) < RandomFillPercent ? 1 : 0;
-                }
+                map[x, y] = 1;
             }
+            else
+            {
+                map[x, y] = Mathf.PerlinNoise(perlinXOffset + (PerlinScale * x / 1.0f), perlinYOffset + (PerlinScale * y / 1.0f)) > PerlinThreshold ? 1 : 0;
+            }
+        }
     }
 
     void SmoothMap(ref int[,] map, ref int[,] tmpMap)
@@ -119,7 +118,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                 }
                 if (nX < 0 || nX >= Width || nY < 0 || nY >= Height)
                 {
-                    wallCount++;
+                    if (nY < 0) { wallCount++; }
                 }
                 else
                 {
