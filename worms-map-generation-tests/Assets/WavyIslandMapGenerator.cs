@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using UnityEngine;
 using UnityEngine.Networking.NetworkSystem;
@@ -59,6 +60,13 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         ThresholdMap(ref _map);
 
         if (ShowAnimation) { yield return new WaitForSeconds(AnimationDelay); }
+
+        var tmpMap = (byte[,])_map.Clone();
+
+        Debug.Log("pick islands");
+        PickIslands(ref _map, ref tmpMap);
+
+        Debug.Log("done");
     }
 
     void RandomFillMap(ref byte[,] map)
@@ -104,6 +112,80 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                     _map[x, y] = 0;
                 }
             }
+    }
+
+    void PickIslands(ref byte[,] map, ref byte[,] tmpMap)
+    {
+        var firstLineHeight = 12;
+        for (var x = 0; x<Width; x++)
+        {
+            FloodFill(map, tmpMap, 255, 128, x, firstLineHeight);
+        }
+
+        map = tmpMap;
+    }
+
+    private struct Coordinate
+    {
+        public int x;
+        public int y;
+    }
+
+    private Coordinate Coord(int x, int y)
+    {
+        return new Coordinate { x = x, y = y };
+    }
+
+    void FloodFill(byte[,] sourceMap, byte[,] targetMap, byte sourceValue, byte targetValue, int startx, int starty)
+    {
+        if (startx < 0 || startx >= Width || starty < 0 || starty >= Width)
+        {
+            Debug.Log("FloodFill off the edge of the map");
+            return;
+        }
+        if (sourceValue == targetValue)
+        {
+            Debug.Log("FloodFill source==targetvalue");
+            return;
+        }
+        if (sourceMap[startx, starty] != sourceValue)
+        {
+            Debug.Log("FloodFill sourceMap at " + startx + "," + starty + " is not " + sourceValue);
+            return;
+        }
+        if (targetMap[startx,starty] == targetValue)
+        {
+            Debug.Log("FloodFill targetMap at " + startx + "," + starty + " is already " + targetValue);
+            return;
+        }
+
+        targetMap[startx, starty] = targetValue;
+
+        var q = new Queue<Coordinate>();
+        q.Enqueue(Coord(startx,starty));
+        while (q.Any())
+        {
+            // TODO this probably won't be significantly slow, but if it is try optimisation from wp:
+            // Most practical implementations use a loop for the west and east directions as an optimization to avoid the overhead of stack or queue management
+
+            var next = q.Dequeue();
+            var x = next.x;
+            var y = next.y;
+            Fill(sourceMap, targetMap, sourceValue, targetValue, q, x+1, y);
+            Fill(sourceMap, targetMap, sourceValue, targetValue, q, x-1, y);
+            Fill(sourceMap, targetMap, sourceValue, targetValue, q, x, y+1);
+            Fill(sourceMap, targetMap, sourceValue, targetValue, q, x, y-1);
+        }
+    }
+
+    private void Fill(byte[,] sourceMap, byte[,] targetMap, byte sourceValue, byte targetValue, Queue<Coordinate> q, int x, int y)
+    {
+        if (x < 0 || x >= Width || y < 0 || y >= Height) { return; }
+        if (sourceMap[x, y] == sourceValue && targetMap[x, y] != targetValue)
+        {
+            targetMap[x, y] = targetValue;
+            q.Enqueue(Coord(x, y));
+        }
     }
 
     void OnDrawGizmos()
