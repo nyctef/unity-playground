@@ -17,22 +17,25 @@ public class CavesMapGenerator : MonoBehaviour
 
     [Range(0, 100)] public int RandomFillPercent = 45;
 
+    [Range(0.0f, 1f)] public float AnimationDelay = 0.25f;
+    public bool ShowAnimation { get { return AnimationDelay > 0.0f; } }
+
     private int[,] _map;
 
     void Start()
     {
-        GenerateMap();
+        StartCoroutine(GenerateMap());
     }
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            GenerateMap();
+            StartCoroutine(GenerateMap());
         }
     }
 
-    void GenerateMap()
+    IEnumerator GenerateMap()
     {
         if (UseRandomSeed)
         {
@@ -45,11 +48,21 @@ public class CavesMapGenerator : MonoBehaviour
 
         RandomFillMap(ref _map);
 
+        if (ShowAnimation)
+        {
+            yield return new WaitForSeconds(AnimationDelay);
+        }
+
         var tmpMap = (int[,])_map.Clone();
 
         for (int i = 0; i < 5; i++)
         {
             SmoothMap(ref _map, ref tmpMap);
+
+            if (ShowAnimation)
+            {
+                yield return new WaitForSeconds(AnimationDelay);
+            }
         }
     }
 
