@@ -407,13 +407,13 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         mesh.RecalculateNormals();
     }
 
-    private void BuildQuad(List<Vector3> vertices, List<int> triangles, Vector3 bottomLeft, Vector3 bottomRight, Vector3 topRight, Vector3 topLeft)
+    private void BuildQuad(List<Vector3> vertices, List<int> triangles, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
     {
         int index = vertices.Count - 1;
-        vertices.Add(bottomLeft);
-        vertices.Add(bottomRight);
-        vertices.Add(topRight);
-        vertices.Add(topLeft);
+        vertices.Add(v1);
+        vertices.Add(v2);
+        vertices.Add(v3);
+        vertices.Add(v4);
         triangles.Add(index + 1);
         triangles.Add(index + 2);
         triangles.Add(index + 3);
