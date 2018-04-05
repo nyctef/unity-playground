@@ -20,7 +20,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     public bool UseRandomSeed = true;
 
     [Range(0.01f, 0.99f)] public float PerlinThreshold = 0.2f;
-    [Range(0.01f, 0.2f)] public float PerlinScale = 0.05f;
+    [Range(0.1f, 20f)] public float PerlinScale = 0.05f;
 
     [Range(0,5)]
     public int DilatePasses = 3;
