@@ -7,8 +7,8 @@ using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using UnityEngine;
 using UnityEngine.Networking.NetworkSystem;
 using Random = System.Random;
+using System.Xml.Linq;
 
-[RequireComponent(typeof(MeshFilter))]
 public class WavyIslandMapGenerator : MonoBehaviour {
 
     public int Width = 512;
@@ -97,22 +97,33 @@ public class WavyIslandMapGenerator : MonoBehaviour {
             if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
         }
 
-        var mesh = new Mesh();
+        foreach (var child in transform.Cast<Transform>().ToList())
+        {
+            Destroy(child.gameObject);
+        }
 
         Debug.Log("Writing map to mesh");
-        WriteMapToMesh(_map, mesh);
+        var collisionMesh = new Mesh();
+        WriteMapToCollisionMesh(_map, collisionMesh);
 
-        var meshFilter = GetComponent<MeshFilter>();
-        if (meshFilter != null)
-        {
-            meshFilter.mesh = mesh;
-        }
+        var mapCollision = new GameObject("MapCollision", typeof(MeshFilter), typeof(MeshCollider), typeof(MeshRenderer));
+        mapCollision.transform.SetParent(transform, false);
+        var meshFilter = mapCollision.RequireComponent<MeshFilter>();
+        meshFilter.mesh = collisionMesh;
+        var meshCollider = mapCollision.RequireComponent<MeshCollider>();
+        meshCollider.sharedMesh = collisionMesh;
 
-        var meshCollider = GetComponent<MeshCollider>();
-        if (meshCollider != null)
-        {
-            meshCollider.sharedMesh = mesh;
-        }
+        var displayMesh = new Mesh();
+        WriteMapToDisplayMesh(_map, displayMesh);
+
+        var mapDisplay = new GameObject("MapDisplay", typeof(MeshFilter), typeof(MeshRenderer));
+        mapDisplay.transform.SetParent(transform, false);
+        var displayMeshFilter = mapDisplay.RequireComponent<MeshFilter>();
+        displayMeshFilter.mesh = displayMesh;
+        var texture = GetMapTexture();
+        var mapRenderer = mapDisplay.RequireComponent<Renderer>();
+        mapRenderer.material.mainTexture = texture;
+
 
         Debug.Log("done");
     }
@@ -312,7 +323,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         return mapData[x, y] > 0;
     }
 
-    private void WriteMapToMesh(byte[,] map, Mesh mesh)
+    private void WriteMapToCollisionMesh(byte[,] map, Mesh mesh)
     {
         var sx = Width;
         //auto sy = (int32)Size.Y;
@@ -337,6 +348,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                 if (IsSolidAt(map, sx, mapX + 1, mapZ)) { cell += 2; }
                 if (IsSolidAt(map, sx, mapX + 1, mapZ + 1)) { cell += 4; }
                 if (IsSolidAt(map, sx, mapX, mapZ + 1)) { cell += 8; }
+
+                // TODO: use correct axes so that we don't have to rotate this 90deg
 
                 var cellLeftInner = new Vector3(Left + mapX - 0.5f, 1, Bottom + mapZ);
                 var cellLeftOuter = new Vector3(Left + mapX - 0.5f, 0, Bottom + mapZ);
@@ -409,6 +422,25 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         mesh.RecalculateNormals();
     }
 
+    private void WriteMapToDisplayMesh(byte[,] map, Mesh mesh)
+    {
+        var sx = Width;
+        //auto sy = (int32)Size.Y;
+        var sz = Height;
+
+        var vertices = new List<Vector3>();
+        var triangles = new List<int>();
+
+        BuildQuad(vertices, triangles, new Vector3(), new Vector3(0, 0, Height), new Vector3(Width, 0, Height), new Vector3(Width, 0, 0));
+
+        var uv = new[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };
+
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangles.ToArray();
+        mesh.uv = uv;
+        mesh.RecalculateNormals();
+    }
+
     private void BuildQuad(List<Vector3> vertices, List<int> triangles, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
     {
         int index = vertices.Count - 1;
@@ -424,24 +456,29 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         triangles.Add(index + 4);
     }
 
+    private Texture2D GetMapTexture()
+    {
+        var texture = new Texture2D(Width, Height, TextureFormat.ARGB32, false);
+        texture.filterMode = FilterMode.Point;
+
+        Color32[] newColors = new Color32[Width * Height];
+        for (int x = 0; x < Width; x++)
+            for (int y = 0; y < Height; y++)
+            {
+                if (_map[x, y] == 0) { newColors[y * Width + x] = new Color32(0, 0, 0, 0); }
+                else { newColors[y * Width + x] = new Color32(255, 0, 0, 255); }
+            }
+        texture.SetPixels32(newColors);
+        texture.Apply();
+
+        return texture;
+    }
+
     void OnDrawGizmos()
     {
         Gizmos.matrix = transform.localToWorldMatrix;
 
-        if (_map != null)
-        {
-            for (int x = 0; x < Width; x++)
-                for (int y = 0; y < Height; y++)
-                {
-                    if (_map[x,y] == 0) { continue; }
-
-                    var color = ((float)_map[x, y]) / 255f;
-                    Gizmos.color = new Color(color, color, color);
-                    var pos = new Vector3(-Width / 2 + x + .5f, 0, -Height / 2 + y + .5f);
-                    Gizmos.DrawCube(pos, Vector3.one / 2);
-                }
-        }
-        else
+        if (_map == null)
         {
             Gizmos.color = Color.gray;
             Gizmos.DrawCube(Vector3.zero, new Vector3(Width, 0, Height));
