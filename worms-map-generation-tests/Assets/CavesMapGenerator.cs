@@ -29,6 +29,7 @@ public class CavesMapGenerator : MonoBehaviour
 
     void Update()
     {
+        // TODO trigger this with something else (ui / function key?)
         if (Input.GetMouseButtonDown(0))
         {
             StartCoroutine(GenerateMap());
