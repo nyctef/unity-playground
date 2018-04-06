@@ -450,6 +450,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         Debug.Log("maxx: " + debugMaxX + " maxz: " + debugMaxZ);
         Debug.Log(vertices.Count);
 
+        // TODO: we end up with more than 64k vertices here so we need to split up into multiple meshes
+
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals();
