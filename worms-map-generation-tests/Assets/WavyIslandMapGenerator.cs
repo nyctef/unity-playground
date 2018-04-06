@@ -108,7 +108,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         var collisionMesh = new Mesh();
         WriteMapToCollisionMesh(_map, collisionMesh);
 
-        var mapCollision = new GameObject("MapCollision", typeof(MeshFilter), typeof(MeshCollider), typeof(MeshRenderer));
+        var mapCollision = new GameObject("MapCollision", typeof(MeshFilter), typeof(MeshCollider)/*, typeof(MeshRenderer)*/);
         mapCollision.transform.SetParent(transform, false);
         var meshFilter = mapCollision.RequireComponent<MeshFilter>();
         meshFilter.mesh = collisionMesh;
