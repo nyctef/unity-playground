@@ -1,0 +1,6 @@
+add a basic player sprite
+add jumping
+generate multiple collision meshes to get around 64k vertex limit
+add explosions to destroy terrain at player location
+add explosion sprites
+add aiming reticle
