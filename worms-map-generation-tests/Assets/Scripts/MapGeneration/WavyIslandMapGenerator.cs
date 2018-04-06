@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using UnityEngine;
 using UnityEngine.Networking.NetworkSystem;
 using Random = System.Random;
@@ -22,7 +21,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     public bool UseRandomSeed = true;
 
     [Range(0.01f, 0.99f)] public float PerlinThreshold = 0.2f;
-    [Range(0.1f, 20f)] public float PerlinScale = 0.05f;
+    [Range(0.01f, 1f)] public float PerlinScale = 0.05f;
 
     [Range(0,5)]
     public int DilatePasses = 3;
@@ -64,31 +63,31 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         Debug.Log("map create");
         _map = new byte[Width, Height];
 
-        if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
+        if (ShowNoiseGeneration) { yield return AnimationPause(); }
 
         Debug.Log("fill map");
         RandomFillMap(ref _map);
 
-        if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
+        if (ShowNoiseGeneration) { yield return AnimationPause(); }
 
         Debug.Log("threshold map");
         ThresholdMap(ref _map);
 
-        if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
+        if (ShowNoiseGeneration) { yield return AnimationPause(); }
 
         var tmpMap = new byte[Width, Height];
 
         Debug.Log("pick islands");
         PickIslands(ref _map, ref tmpMap);
 
-        if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
+        if (ShowNoiseGeneration) { yield return AnimationPause(); }
 
         for (int i = 0; i < DilatePasses; i++)
         {
             Debug.Log("dilate");
             Dilate(ref _map, ref tmpMap, 128);
 
-            if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
+            if (ShowNoiseGeneration) { yield return AnimationPause(); }
         }
 
         for (int i = 0; i < SmoothPasses; i++)
@@ -96,25 +95,25 @@ public class WavyIslandMapGenerator : MonoBehaviour {
             Debug.Log("smooth");
             Smooth(ref _map, ref tmpMap, 128);
 
-            if (ShowNoiseGeneration) { yield return new WaitForSeconds(AnimationDelay); }
+            if (ShowNoiseGeneration) { yield return AnimationPause(); }
         }
 
-        foreach (var child in transform.Cast<Transform>().ToList())
-        {
-            Destroy(child.gameObject);
-        }
+        ClearChildren();
+        AddCollisionMesh();
+        AddDisplayMesh();
 
-        Debug.Log("Writing map to mesh");
-        var collisionMesh = new Mesh();
-        WriteMapToCollisionMesh(_map, collisionMesh);
+        Debug.Log("done");
+    }
 
-        var mapCollision = new GameObject("MapCollision", typeof(MeshFilter), typeof(MeshCollider)/*, typeof(MeshRenderer)*/);
-        mapCollision.transform.SetParent(transform, false);
-        var meshFilter = mapCollision.RequireComponent<MeshFilter>();
-        meshFilter.mesh = collisionMesh;
-        var meshCollider = mapCollision.RequireComponent<MeshCollider>();
-        meshCollider.sharedMesh = collisionMesh;
+    private WaitForSeconds AnimationPause()
+    {
+        ClearChildren();
+        AddDisplayMesh();
+        return new WaitForSeconds(AnimationDelay);
+    }
 
+    private void AddDisplayMesh()
+    {
         var displayMesh = new Mesh();
         WriteMapToDisplayMesh(_map, displayMesh);
 
@@ -126,8 +125,29 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         var mapRenderer = mapDisplay.RequireComponent<Renderer>();
         mapRenderer.material = MapMaterial;
         mapRenderer.material.mainTexture = texture;
+    }
 
-        Debug.Log("done");
+    private void AddCollisionMesh()
+    {
+        Debug.Log("Writing map to mesh");
+        var collisionMesh = new Mesh();
+        WriteMapToCollisionMesh(_map, collisionMesh);
+
+        var mapCollision =
+            new GameObject("MapCollision", typeof(MeshFilter), typeof(MeshCollider) /*, typeof(MeshRenderer)*/);
+        mapCollision.transform.SetParent(transform, false);
+        var meshFilter = mapCollision.RequireComponent<MeshFilter>();
+        meshFilter.mesh = collisionMesh;
+        var meshCollider = mapCollision.RequireComponent<MeshCollider>();
+        meshCollider.sharedMesh = collisionMesh;
+    }
+
+    private void ClearChildren()
+    {
+        foreach (var child in transform.Cast<Transform>().ToList())
+        {
+            Destroy(child.gameObject);
+        }
     }
 
     void RandomFillMap(ref byte[,] map)
@@ -146,8 +166,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
             else
             {
                 float perlin = Mathf.PerlinNoise(
-                    perlinXOffset + (PerlinScale * x / 1.0f),
-                    perlinYOffset + (PerlinScale * y / 1.0f));
+                    perlinXOffset + PerlinScale * (x / 1.0f),
+                    perlinYOffset + PerlinScale * (y / 1.0f));
 
                     // apply "turbulence" to the perlin noise
                     perlin = Mathf.Abs(perlin - 0.5f) * 2;
@@ -331,6 +351,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     private void WriteMapToCollisionMesh(byte[,] map, Mesh mesh)
     {
         Debug.Log("WriteMapToCollisionMesh " + Width + " " + Height);
+        var debugMaxZ = 0.0f;
+        var debugMaxX = 0.0f;
 
         var sx = Width;
         //auto sy = (int32)Size.Y;
@@ -364,6 +386,9 @@ public class WavyIslandMapGenerator : MonoBehaviour {
                 var cellRightOuter  = new Vector3(left + mapX + 0.5f, 0, bottom + mapZ);
                 var cellTopInner    = new Vector3(left + mapX,        1, bottom + mapZ + 0.5f);
                 var cellTopOuter    = new Vector3(left + mapX,        0, bottom + mapZ + 0.5f);
+
+                debugMaxX = Mathf.Max(debugMaxX, mapX);
+                debugMaxZ = Mathf.Max(debugMaxZ, mapZ);
 
                 // +8  +4
                 //
@@ -422,6 +447,9 @@ public class WavyIslandMapGenerator : MonoBehaviour {
             }
         }
 
+        Debug.Log("maxx: " + debugMaxX + " maxz: " + debugMaxZ);
+        Debug.Log(vertices.Count);
+
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals();
@@ -470,8 +498,9 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         for (int x = 0; x < Width; x++)
             for (int y = 0; y < Height; y++)
             {
-                if (_map[x, y] == 0) { newColors[y * Width + x] = new Color32(0, 0, 0, 0); }
-                else { newColors[y * Width + x] = new Color32(255, 0, 0, 255); }
+                var mapValue = _map[x, y];
+                if (mapValue == 0) { newColors[y * Width + x] = new Color32(0, 0, 0, 0); }
+                else { newColors[y * Width + x] = new Color32(mapValue, mapValue, mapValue, 255); }
             }
         texture.SetPixels32(newColors);
         texture.Apply();
