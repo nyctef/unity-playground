@@ -330,6 +330,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
 
     private void WriteMapToCollisionMesh(byte[,] map, Mesh mesh)
     {
+        Debug.Log("WriteMapToCollisionMesh " + Width + " " + Height);
+
         var sx = Width;
         //auto sy = (int32)Size.Y;
         var sz = Height;
@@ -337,10 +339,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
-        var Left = 1;
-        var Bottom = 1;
-        var Right = 1 + Width;
-        var Top = 1 + Height;
+        var left = 1;
+        var bottom = 1;
 
         // ref: https://en.wikipedia.org/wiki/Marching_squares
         for (int mapZ = 0; mapZ < sz - 1; mapZ++)
@@ -356,14 +356,14 @@ public class WavyIslandMapGenerator : MonoBehaviour {
 
                 // TODO: use correct axes so that we don't have to rotate this 90deg
 
-                var cellLeftInner = new Vector3(Left + mapX - 0.5f, 1, Bottom + mapZ);
-                var cellLeftOuter = new Vector3(Left + mapX - 0.5f, 0, Bottom + mapZ);
-                var cellBottomInner = new Vector3(Left + mapX, 1, Bottom + mapZ - 0.5f);
-                var cellBottomOuter = new Vector3(Left + mapX, 0, Bottom + mapZ - 0.5f);
-                var cellRightInner = new Vector3(Left + mapX + 0.5f, 1, Bottom + mapZ);
-                var cellRightOuter = new Vector3(Left + mapX + 0.5f, 0, Bottom + mapZ);
-                var cellTopInner = new Vector3(Left + mapX, 1, Bottom + mapZ + 0.5f);
-                var cellTopOuter = new Vector3(Left + mapX, 0, Bottom + mapZ + 0.5f);
+                var cellLeftInner   = new Vector3(left + mapX - 0.5f, 1, bottom + mapZ);
+                var cellLeftOuter   = new Vector3(left + mapX - 0.5f, 0, bottom + mapZ);
+                var cellBottomInner = new Vector3(left + mapX,        1, bottom + mapZ - 0.5f);
+                var cellBottomOuter = new Vector3(left + mapX,        0, bottom + mapZ - 0.5f);
+                var cellRightInner  = new Vector3(left + mapX + 0.5f, 1, bottom + mapZ);
+                var cellRightOuter  = new Vector3(left + mapX + 0.5f, 0, bottom + mapZ);
+                var cellTopInner    = new Vector3(left + mapX,        1, bottom + mapZ + 0.5f);
+                var cellTopOuter    = new Vector3(left + mapX,        0, bottom + mapZ + 0.5f);
 
                 // +8  +4
                 //

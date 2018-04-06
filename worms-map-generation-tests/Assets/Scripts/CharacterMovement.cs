@@ -25,13 +25,13 @@ public class CharacterMovement : MonoBehaviour {
 
         if (_controller.isGrounded)
         {
-            Debug.Log("CharacterMovement coyote 0 ");
+            //Debug.Log("CharacterMovement coyote 0 ");
             _coyoteTime = 0;
         }
         else
         {
             _coyoteTime += Time.deltaTime;
-            Debug.Log("CharacterMovement setting coyote time " + _coyoteTime);
+            //Debug.Log("CharacterMovement setting coyote time " + _coyoteTime);
         }
 
         var shouldFall = _coyoteTime > MaxCoyoteTime;
@@ -39,14 +39,14 @@ public class CharacterMovement : MonoBehaviour {
         if (shouldFall)
         {
             _fallingVelocity += Gravity * Time.deltaTime;
-            Debug.Log("CharacterMovement falling " + _fallingVelocity);
+            //Debug.Log("CharacterMovement falling " + _fallingVelocity);
         }
         else
         {
             _fallingVelocity.y = -_controller.minMoveDistance;
-            Debug.Log("CharacterMovement grounded " + _fallingVelocity);
+            //Debug.Log("CharacterMovement grounded " + _fallingVelocity);
         }
-        Debug.Log("CharacterMovement move " + move + " + " + _fallingVelocity);
+        //Debug.Log("CharacterMovement move " + move + " + " + _fallingVelocity);
         _controller.Move(move + _fallingVelocity);
     }
 }
