@@ -177,10 +177,13 @@ public class WavyIslandMapGenerator : MonoBehaviour {
 
     void PickIslands(ref byte[,] map, ref byte[,] tmpMap)
     {
-        var firstLineHeight = 12;
-        for (var x = 0; x < Width; x++)
+        var fillLineHeights = new[] {20, 50, 100, 200};
+        foreach (var fillLineHeight in fillLineHeights)
         {
-            FloodFill(map, tmpMap, 255, 128, x, firstLineHeight);
+            for (var x = 0; x < Width; x++)
+            {
+                FloodFill(map, tmpMap, 255, 128, x, fillLineHeight);
+            }
         }
 
         Swap(ref map, ref tmpMap);
