@@ -378,14 +378,14 @@ public class WavyIslandMapGenerator : MonoBehaviour {
 
                 // TODO: use correct axes so that we don't have to rotate this 90deg
 
-                var cellLeftInner   = new Vector3(left + mapX - 0.5f, 1, bottom + mapZ);
-                var cellLeftOuter   = new Vector3(left + mapX - 0.5f, 0, bottom + mapZ);
-                var cellBottomInner = new Vector3(left + mapX,        1, bottom + mapZ - 0.5f);
-                var cellBottomOuter = new Vector3(left + mapX,        0, bottom + mapZ - 0.5f);
-                var cellRightInner  = new Vector3(left + mapX + 0.5f, 1, bottom + mapZ);
-                var cellRightOuter  = new Vector3(left + mapX + 0.5f, 0, bottom + mapZ);
-                var cellTopInner    = new Vector3(left + mapX,        1, bottom + mapZ + 0.5f);
-                var cellTopOuter    = new Vector3(left + mapX,        0, bottom + mapZ + 0.5f);
+                var cellLeftInner   = new Vector3(left + mapX - 0.5f,  1, bottom + mapZ);
+                var cellLeftOuter   = new Vector3(left + mapX - 0.5f, -1, bottom + mapZ);
+                var cellBottomInner = new Vector3(left + mapX,         1, bottom + mapZ - 0.5f);
+                var cellBottomOuter = new Vector3(left + mapX,        -1, bottom + mapZ - 0.5f);
+                var cellRightInner  = new Vector3(left + mapX + 0.5f,  1, bottom + mapZ);
+                var cellRightOuter  = new Vector3(left + mapX + 0.5f, -1, bottom + mapZ);
+                var cellTopInner    = new Vector3(left + mapX,         1, bottom + mapZ + 0.5f);
+                var cellTopOuter    = new Vector3(left + mapX,        -1, bottom + mapZ + 0.5f);
 
                 debugMaxX = Mathf.Max(debugMaxX, mapX);
                 debugMaxZ = Mathf.Max(debugMaxZ, mapZ);
