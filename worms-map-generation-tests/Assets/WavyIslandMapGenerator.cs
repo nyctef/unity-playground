@@ -334,10 +334,10 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
-        var Left = 1 + -Width / 2;
-        var Bottom = 1 + -Height / 2;
-        var Right = 1 + Width / 2;
-        var Top = 1 + Height / 2;
+        var Left = 1;
+        var Bottom = 1;
+        var Right = 1 + Width;
+        var Top = 1 + Height;
 
         // ref: https://en.wikipedia.org/wiki/Marching_squares
         for (int mapZ = 0; mapZ < sz - 1; mapZ++)
@@ -483,7 +483,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         if (_map == null)
         {
             Gizmos.color = Color.gray;
-            Gizmos.DrawCube(Vector3.zero, new Vector3(Width, 0, Height));
+            Gizmos.DrawCube(new Vector3(Width/2, 0, Height/2), new Vector3(Width, 0, Height));
         }
     }
 }
