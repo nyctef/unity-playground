@@ -223,6 +223,7 @@ MonoBehaviour:
   Speed: 20
   Gravity: {x: 0, y: -4, z: 0}
   MaxCoyoteTime: 0.1
+  JumpForce: {x: 0, y: 2, z: 0}
 --- !u!143 &1567319406
 CharacterController:
   m_ObjectHideFlags: 0

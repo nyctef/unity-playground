@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,6 +13,8 @@ public class CharacterMovement : MonoBehaviour
     public Vector3 Gravity = new Vector3(0, -.981f);
     public float MaxCoyoteTime = 0.1f;
 
+    public Vector3 JumpForce = new Vector3(0, 2f);
+
     private Vector3 _fallingVelocity;
     private float _coyoteTime = 0;
 
@@ -23,7 +26,6 @@ public class CharacterMovement : MonoBehaviour
     void Update()
     {
         var move = new Vector3(Input.GetAxisRaw("Horizontal"), 0, 0) * Time.deltaTime * Speed;
-
 
         if (_controller.isGrounded)
         {
@@ -40,16 +42,23 @@ public class CharacterMovement : MonoBehaviour
         {
             _fallingVelocity += Gravity * Time.deltaTime;
         }
-        else
+        else if (Input.GetKeyDown(KeyCode.Space))
         {
-            _fallingVelocity.y = -_controller.minMoveDistance;
+            _fallingVelocity = JumpForce;
         }
+        else if (Math.Abs(_fallingVelocity.y) < 0.1f)
+        {
+            // we have to push the character down a bit or isGrounded wont be set properly
+            _fallingVelocity.y = -0.1f;
+        }
+
+        var zCorrection = new Vector3(0,0, -transform.position.z);
 
         Debug.Log("CharacterMovement " + transform.position.y.ToString("R") + " " + (_controller.isGrounded ? "G": "F") +" move " + move.ToString("R") + " fallingVelocity " + _fallingVelocity.ToString("R") + " coyoteTime " + _coyoteTime + " shouldFall " + shouldFall + " zCorrection " +zCorrection);
 
         transform.localScale = FlipX(transform.localScale, move.x < 0);
 
-        _controller.Move(move + _fallingVelocity);
+        _controller.Move(move + _fallingVelocity + zCorrection);
 
         Debug.Log(_controller.isGrounded);
     }
