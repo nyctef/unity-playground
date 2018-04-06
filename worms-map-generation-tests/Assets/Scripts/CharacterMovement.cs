@@ -27,13 +27,11 @@ public class CharacterMovement : MonoBehaviour
 
         if (_controller.isGrounded)
         {
-            Debug.Log("CharacterMovement coyote 0 ");
             _coyoteTime = 0;
         }
         else
         {
             _coyoteTime += Time.deltaTime;
-            Debug.Log("CharacterMovement setting coyote time " + _coyoteTime);
         }
 
         var shouldFall = _coyoteTime > MaxCoyoteTime;
@@ -41,19 +39,19 @@ public class CharacterMovement : MonoBehaviour
         if (shouldFall)
         {
             _fallingVelocity += Gravity * Time.deltaTime;
-            Debug.Log("CharacterMovement falling " + _fallingVelocity);
         }
         else
         {
             _fallingVelocity.y = -_controller.minMoveDistance;
-            Debug.Log("CharacterMovement grounded " + _fallingVelocity);
         }
 
-        Debug.Log("CharacterMovement move " + move + " + " + _fallingVelocity);
+        Debug.Log("CharacterMovement " + transform.position.y.ToString("R") + " " + (_controller.isGrounded ? "G": "F") +" move " + move.ToString("R") + " fallingVelocity " + _fallingVelocity.ToString("R") + " coyoteTime " + _coyoteTime + " shouldFall " + shouldFall + " zCorrection " +zCorrection);
 
         transform.localScale = FlipX(transform.localScale, move.x < 0);
 
         _controller.Move(move + _fallingVelocity);
+
+        Debug.Log(_controller.isGrounded);
     }
 
     private Vector3 FlipX(Vector3 v, bool facingLeft)
