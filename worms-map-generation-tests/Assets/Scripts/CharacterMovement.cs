@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class CharacterMovement : MonoBehaviour {
+public class CharacterMovement : MonoBehaviour
+{
 
     private CharacterController _controller;
 
@@ -47,6 +48,15 @@ public class CharacterMovement : MonoBehaviour {
             //Debug.Log("CharacterMovement grounded " + _fallingVelocity);
         }
         //Debug.Log("CharacterMovement move " + move + " + " + _fallingVelocity);
+
+        transform.localScale = FlipX(transform.localScale, move.x < 0);
+
         _controller.Move(move + _fallingVelocity);
+    }
+
+    private Vector3 FlipX(Vector3 v, bool facingLeft)
+    {
+        var newX = facingLeft ? -Mathf.Abs(v.x) : Mathf.Abs(v.x);
+        return new Vector3(newX, v.y, v.z);
     }
 }
