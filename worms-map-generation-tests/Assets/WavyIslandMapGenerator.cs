@@ -14,6 +14,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     public int Width = 512;
     public int Height = 128;
 
+    public Material MapMaterial;
+
     [Header("Generation settings")]
 
     public int Seed;
@@ -122,8 +124,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         displayMeshFilter.mesh = displayMesh;
         var texture = GetMapTexture();
         var mapRenderer = mapDisplay.RequireComponent<Renderer>();
+        mapRenderer.material = MapMaterial;
         mapRenderer.material.mainTexture = texture;
-
 
         Debug.Log("done");
     }

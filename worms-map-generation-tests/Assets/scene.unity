@@ -311,6 +311,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Width: 1920
   Height: 696
+  MapMaterial: {fileID: 2100000, guid: 04bdc99b09452754892f7de2f0f93c7f, type: 2}
   Seed: 0
   UseRandomSeed: 0
   PerlinThreshold: 0.2
