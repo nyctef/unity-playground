@@ -1,5 +1,13 @@
 generate multiple collision meshes to get around 64k vertex limit
 add explosions to destroy terrain at player location
 add explosion sprites
-add aiming reticle
+add aiming reticle (read UI tutorials?)
 get sprite animation working at some point
+
+more cell automata stuff
+ - add edges to top of level
+ - to find spawnable locations: flood fill sky and then find bottom edge?
+ - make sure there are paths between rooms? (optional)
+ - more scenes to test this? (smaller map size)
+
+map: once cell automata stuff is done then set remaining solid ground to texture values
