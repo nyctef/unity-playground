@@ -75,6 +75,7 @@ public class CharacterMovement : MonoBehaviour
             _fallingVelocity.y = -0.1f;
         }
 
+        // no 3D allowed
         var zCorrection = new Vector3(0,0, -transform.position.z);
 
         Debug.Log("CharacterMovement " + transform.position.y.ToString("R") + " " + (_controller.isGrounded ? "G": "F") +" move " + move.ToString("R") + " fallingVelocity " + _fallingVelocity.ToString("R") + " coyoteTime " + _coyoteTime + " shouldFall " + shouldFall + " zCorrection " +zCorrection);
