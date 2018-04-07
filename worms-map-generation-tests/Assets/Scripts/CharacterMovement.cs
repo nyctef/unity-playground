@@ -25,7 +25,10 @@ public class CharacterMovement : MonoBehaviour
 
     void Update()
     {
-        var move = new Vector3(Input.GetAxisRaw("Horizontal"), 0, 0) * Time.deltaTime * Speed;
+        var horizontalInput = Input.GetAxisRaw("Horizontal");
+        var jumpInput = Input.GetKeyDown(KeyCode.Space);
+
+        var move = new Vector3(horizontalInput, 0, 0) * Time.deltaTime * Speed;
         var facingLeft = move.x < 0;
 
         // calculate "coyote time" - a small grace period to jump off ledges with
@@ -56,7 +59,7 @@ public class CharacterMovement : MonoBehaviour
             // wheeeeee
             _fallingVelocity += Gravity * Time.deltaTime;
         }
-        else if (Input.GetKeyDown(KeyCode.Space))
+        else if (jumpInput)
         {
             // do a vertical or horizontal jump depending on if we're moving horizontally
             if (Math.Abs(move.x) < 0.01f)

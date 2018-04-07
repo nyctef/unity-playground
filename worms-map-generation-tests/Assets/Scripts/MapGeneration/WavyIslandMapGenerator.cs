@@ -45,7 +45,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     void Update()
     {
         // TODO probably going to need a more general map/game manager at some point - UI trigger?
-        if (Input.GetKeyDown(KeyCode.F5))
+        if (Input.GetButtonDown("RegenMap"))
         {
             StartCoroutine(GenerateMap());
         }
