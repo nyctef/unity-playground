@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Networking.NetworkSystem;
 using Random = System.Random;
 using System.Xml.Linq;
+using UnityEngine.Rendering;
 
 public class WavyIslandMapGenerator : MonoBehaviour {
 
@@ -130,7 +131,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     private void AddCollisionMesh()
     {
         Debug.Log("Writing map to mesh");
-        var collisionMesh = new Mesh();
+        var collisionMesh = new Mesh {indexFormat = IndexFormat.UInt32};
         WriteMapToCollisionMesh(_map, collisionMesh);
 
         var mapCollision =
