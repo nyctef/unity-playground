@@ -44,9 +44,8 @@ public class WavyIslandMapGenerator : MonoBehaviour {
 
     void Update()
     {
-        // TODO trigger this with something else (ui / function key?)
-        // probably going to need a more general map/game manager at some point
-        if (Input.GetMouseButtonDown(0))
+        // TODO probably going to need a more general map/game manager at some point - UI trigger?
+        if (Input.GetKeyDown(KeyCode.F5))
         {
             StartCoroutine(GenerateMap());
         }
