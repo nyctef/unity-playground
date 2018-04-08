@@ -94,10 +94,10 @@ public class CharacterMovement : MonoBehaviour
         var newAnimation = Math.Abs(move.x) > 0.001 ? "Walk" : "Idle";
         SetAnimation(newAnimation);
 
-        Debug.LogFormat(
-            "CharacterMovement {0:R} {1} move {2} fallingVelocity {3} coyoteTime {4} shouldFall {5} zCorrection {6} anim {7}",
-            transform.position.y, _controller.isGrounded ? "G" : "F", move.ToString("R"),
-            _fallingVelocity.ToString("R"), _coyoteTime, shouldFall, zCorrection, newAnimation);
+        //Debug.LogFormat(
+        //    "CharacterMovement {0:R} {1} move {2} fallingVelocity {3} coyoteTime {4} shouldFall {5} zCorrection {6} anim {7}",
+        //    transform.position.y, _controller.isGrounded ? "G" : "F", move.ToString("R"),
+        //    _fallingVelocity.ToString("R"), _coyoteTime, shouldFall, zCorrection, newAnimation);
 
         transform.localScale = FlipX(transform.localScale, facingLeft);
 
