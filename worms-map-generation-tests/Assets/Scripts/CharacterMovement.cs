@@ -7,6 +7,7 @@ using UnityEngine;
 public class CharacterMovement : MonoBehaviour
 {
     private CharacterController _controller;
+    private SimpleSpriteAnimator _animator;
 
     public float Speed = 1f;
     public Vector3 Gravity = new Vector3(0, -.981f);
@@ -18,9 +19,12 @@ public class CharacterMovement : MonoBehaviour
     private Vector3 _fallingVelocity;
     private float _coyoteTime = 0;
 
+    private string _currentAnimation = null;
+
     void Start()
     {
         _controller = GetComponent<CharacterController>();
+        _animator = GetComponent<SimpleSpriteAnimator>();
     }
 
     void Update()
@@ -87,11 +91,27 @@ public class CharacterMovement : MonoBehaviour
         // no 3D allowed
         var zCorrection = new Vector3(0,0, -transform.position.z);
 
-        //Debug.Log("CharacterMovement " + transform.position.y.ToString("R") + " " + (_controller.isGrounded ? "G": "F") +" move " + move.ToString("R") + " fallingVelocity " + _fallingVelocity.ToString("R") + " coyoteTime " + _coyoteTime + " shouldFall " + shouldFall + " zCorrection " +zCorrection);
+        var newAnimation = Math.Abs(move.x) > 0.001 ? "Walk" : "Idle";
+        SetAnimation(newAnimation);
+
+        Debug.LogFormat(
+            "CharacterMovement {0:R} {1} move {2} fallingVelocity {3} coyoteTime {4} shouldFall {5} zCorrection {6} anim {7}",
+            transform.position.y, _controller.isGrounded ? "G" : "F", move.ToString("R"),
+            _fallingVelocity.ToString("R"), _coyoteTime, shouldFall, zCorrection, newAnimation);
 
         transform.localScale = FlipX(transform.localScale, facingLeft);
 
         _controller.Move(move + _fallingVelocity + zCorrection);
+    }
+
+    private void SetAnimation(string newAnimation)
+    {
+        if (newAnimation == _currentAnimation)
+        {
+            return;
+        }
+        _currentAnimation = newAnimation;
+        _animator.Play(newAnimation);
     }
 
     private Vector3 FlipX(Vector3 v, bool facingLeft)
