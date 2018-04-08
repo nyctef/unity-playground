@@ -78,7 +78,10 @@ public class EventManager : MonoBehaviour
         if (_eventDictionary.TryGetValue(type, out handlers))
         {
             var typedHandlers = (List<Action<T>>) handlers;
-            Debug.Log("Triggered event type "+typeName+" for " + typedHandlers.Count + " listeners");
+            if (typedHandlers.Count == 0)
+            {
+                Debug.LogWarning("Triggered event type " + typeName + " for 0 listeners");
+            }
             foreach (var handler in typedHandlers)
             {
                 handler.Invoke(payload);
