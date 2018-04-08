@@ -1,12 +1,18 @@
-add explosions to destroy terrain at player location
 add explosion sprites
 add aiming reticle (read UI tutorials?)
 get sprite animation working at some point
+kill player if they fall below a certain level
 
 more cell automata stuff
  - add edges to top of level
  - to find spawnable locations: flood fill sky and then find bottom edge?
  - make sure there are paths between rooms? (optional)
  - more scenes to test this? (smaller map size)
+
+spawn player at an actual point on the map
+ 
+improve map performance
+ - explosion (more important)
+ - initial map generation (less important)
 
 map: once cell automata stuff is done then set remaining solid ground to texture values
