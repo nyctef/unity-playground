@@ -26,7 +26,7 @@ public class CharacterMovement : MonoBehaviour
     void Update()
     {
         var horizontalInput = Input.GetAxisRaw("Horizontal");
-        var jumpInput = Input.GetKeyDown(KeyCode.Space);
+        var jumpInput = Input.GetButtonDown("Jump");
 
         var move = new Vector3(horizontalInput, 0, 0) * Time.deltaTime * Speed;
         var facingLeft = move.x < 0;
