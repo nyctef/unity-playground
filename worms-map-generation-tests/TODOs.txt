@@ -18,3 +18,5 @@ improve map performance
 map: once cell automata stuff is done then set remaining solid ground to texture values
 
 check out Unity 2018 beta for later C# support
+
+fix EventManager errors on shutdown

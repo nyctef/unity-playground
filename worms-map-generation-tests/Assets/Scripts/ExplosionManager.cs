@@ -11,7 +11,7 @@ public class ExplosionManager : MonoBehaviour
 
     void OnDisable()
     {
-        EventManager.Instance.StopListening<Events.Explosion>(OnExplosion);
+        //EventManager.Instance.StopListening<Events.Explosion>(OnExplosion);
     }
 
     private void OnExplosion(Events.Explosion explosion)

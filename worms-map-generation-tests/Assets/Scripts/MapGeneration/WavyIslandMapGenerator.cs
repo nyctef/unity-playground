@@ -80,7 +80,9 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
 
     void OnDisable()
     {
-        EventManager.Instance.StopListening<Events.Explosion>(OnExplosion);
+        // TODO: it looks like EventManager always gets destroyed before we call this
+        // do we actually need to clean up here?
+        //EventManager.Instance.StopListening<Events.Explosion>(OnExplosion);
     }
 
     private void OnExplosion(Events.Explosion explosion)
