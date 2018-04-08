@@ -7,9 +7,34 @@ using UnityEngine;
 using UnityEngine.Networking.NetworkSystem;
 using Random = System.Random;
 using System.Xml.Linq;
+using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 
-public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackReceiver {
+public class WavyIslandMapGenerator : MonoBehaviour
+{
+    public class MapData
+    {
+        public byte[] Map;
+        public int Width;
+        public int Height;
+
+        public void Init(int width, int height)
+        {
+            Width = width;
+            Height = height;
+            Map = new byte[width * height];
+        }
+
+        public byte Get(int x, int y)
+        {
+            return Map[y * Width + x];
+        }
+
+        public void Set(int x, int y, byte value)
+        {
+            Map[y * Width + x] = value;
+        }
+    }
 
     public int Width = 512;
     public int Height = 128;
@@ -35,38 +60,7 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
     public bool ShowNoiseGeneration = true;
     //public bool ShowMeshGeneration = true;
 
-    private byte[,] _map;
-    [SerializeField] private byte[] _serializedMap;
-
-    public void OnBeforeSerialize()
-    {
-        if (_map == null)
-        {
-            return;
-        }
-
-        _serializedMap = new byte[Width * Height];
-        for (int x = 0; x < Width; x++)
-        for (int y = 0; y < Height; y++)
-        {
-            _serializedMap[y * Width + x] = _map[x, y];
-        }
-    }
-
-    public void OnAfterDeserialize()
-    {
-        if (_serializedMap == null)
-        {
-            return;
-        }
-
-        _map = new byte[Width, Height];
-        for (int x = 0; x < Width; x++)
-        for (int y = 0; y < Height; y++)
-        {
-            _map[x,y] = _serializedMap[y*Width + x];
-        }
-    }
+    [SerializeField] private MapData _map;
 
     void Start()
     {
@@ -90,7 +84,7 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
         RemoveCircle(_map, transform.InverseTransformPoint(explosion.worldSpacePosition), explosion.radius);
     }
 
-    private void RemoveCircle(byte[,] map, Vector3 localSpace, int explosionRadius)
+    private void RemoveCircle(MapData map, Vector3 localSpace, int explosionRadius)
     {
         int pixelsCleared = 0;
         for (int ex = -explosionRadius; ex < +explosionRadius; ex++)
@@ -107,7 +101,7 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
                 continue;
             }
 
-            map[x, y] = 0;
+            map.Set(x, y, 0);
             pixelsCleared++;
         }
 
@@ -137,7 +131,8 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
         Debug.Log("WavyIslandMapGenerator GenerateMap with seed " + Seed, this);
 
         Debug.Log("map create");
-        _map = new byte[Width, Height];
+        _map = new MapData();
+        _map.Init(Width, Height);
 
         if (ShowNoiseGeneration) { yield return AnimationPause(); }
 
@@ -151,7 +146,8 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
 
         if (ShowNoiseGeneration) { yield return AnimationPause(); }
 
-        var tmpMap = new byte[Width, Height];
+        var tmpMap = new MapData();
+        tmpMap.Init(Width, Height);
 
         Debug.Log("pick islands");
         PickIslands(ref _map, ref tmpMap);
@@ -190,6 +186,8 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
 
     private void AddDisplayMesh()
     {
+        Profiler.BeginSample("WavyIslandMapGenerator.AddDisplayMesh");
+
         var displayMesh = new Mesh();
         CreateDisplayMesh(displayMesh);
 
@@ -201,10 +199,15 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
         var mapRenderer = mapDisplay.RequireComponent<Renderer>();
         mapRenderer.material = MapMaterial;
         mapRenderer.material.mainTexture = texture;
+
+        Profiler.EndSample();
     }
 
     private void AddCollisionMesh()
     {
+        // TODO: we should be able to use CallerMemberName for something nicer with a later C# version
+        Profiler.BeginSample("WavyIslandMapGenerator.AddCollisionMesh");
+
         Debug.Log("Writing map to mesh");
         var collisionMesh = new Mesh {indexFormat = IndexFormat.UInt32};
         WriteMapToCollisionMesh(_map, collisionMesh);
@@ -216,17 +219,23 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
         meshFilter.mesh = collisionMesh;
         var meshCollider = mapCollision.RequireComponent<MeshCollider>();
         meshCollider.sharedMesh = collisionMesh;
+
+        Profiler.EndSample();
     }
 
     private void ClearChildren()
     {
+        Profiler.BeginSample("WavyIslandMapGenerator.ClearChildren");
+
         foreach (var child in transform.Cast<Transform>().ToList())
         {
             Destroy(child.gameObject);
         }
+
+        Profiler.EndSample();
     }
 
-    void RandomFillMap(ref byte[,] map)
+    void RandomFillMap(ref MapData map)
     {
         int perlinSeed = new Random(Seed).Next();
         int perlinXOffset = perlinSeed & 0xFF;
@@ -237,7 +246,7 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
         {
             if (y == 0)
             {
-                map[x, y] = 255;
+                map.Set(x, y, 255);
             }
             else
             {
@@ -248,30 +257,30 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
                     // apply "turbulence" to the perlin noise
                     perlin = Mathf.Abs(perlin - 0.5f) * 2;
 
-                map[x, y] = (byte)(perlin * 255);
+                map.Set(x, y, (byte) (perlin * 255));
             }
         }
     }
 
-    void ThresholdMap(ref byte[,] map)
+    void ThresholdMap(ref MapData map)
     {
         var threshold = (byte)(PerlinThreshold * 255);
 
         for (int x = 0; x < Width; x++)
             for (int y = 0; y < Height; y++)
             {
-                if (_map[x, y] > threshold)
+                if (map.Get(x,y) > threshold)
                 {
-                    _map[x, y] = 255;
+                    map.Set(x, y, 255);
                 }
                 else
                 {
-                    _map[x, y] = 0;
+                    map.Set(x, y, 0);
                 }
             }
     }
 
-    void PickIslands(ref byte[,] map, ref byte[,] tmpMap)
+    void PickIslands(ref MapData map, ref MapData tmpMap)
     {
         var fillLineHeights = new[] {20, 50, 100, 200};
         foreach (var fillLineHeight in fillLineHeights)
@@ -285,7 +294,7 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
         Swap(ref map, ref tmpMap);
     }
 
-    private static void Swap(ref byte[,] map, ref byte[,] tmpMap)
+    private static void Swap(ref MapData map, ref MapData tmpMap)
     {
         var swap = map;
         map = tmpMap;
@@ -303,7 +312,7 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
         return new Coordinate { x = x, y = y };
     }
 
-    void FloodFill(byte[,] sourceMap, byte[,] targetMap, byte sourceValue, byte targetValue, int startx, int starty)
+    void FloodFill(MapData sourceMap, MapData targetMap, byte sourceValue, byte targetValue, int startx, int starty)
     {
         if (startx < 0 || startx >= Width || starty < 0 || starty >= Width)
         {
@@ -315,18 +324,18 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
             Debug.Log("FloodFill source==targetvalue");
             return;
         }
-        if (sourceMap[startx, starty] != sourceValue)
+        if (sourceMap.Get(startx, starty) != sourceValue)
         {
             //Debug.Log("FloodFill sourceMap at " + startx + "," + starty + " is not " + sourceValue);
             return;
         }
-        if (targetMap[startx,starty] == targetValue)
+        if (targetMap.Get(startx, starty) == targetValue)
         {
             //Debug.Log("FloodFill targetMap at " + startx + "," + starty + " is already " + targetValue);
             return;
         }
 
-        targetMap[startx, starty] = targetValue;
+        targetMap.Set(startx, starty, targetValue);
 
         var q = new Queue<Coordinate>();
         q.Enqueue(Coord(startx,starty));
@@ -345,17 +354,17 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
         }
     }
 
-    private void Fill(byte[,] sourceMap, byte[,] targetMap, byte sourceValue, byte targetValue, Queue<Coordinate> q, int x, int y)
+    private void Fill(MapData sourceMap, MapData targetMap, byte sourceValue, byte targetValue, Queue<Coordinate> q, int x, int y)
     {
         if (x < 0 || x >= Width || y < 0 || y >= Height) { return; }
-        if (sourceMap[x, y] == sourceValue && targetMap[x, y] != targetValue)
+        if (sourceMap.Get(x,y) == sourceValue && targetMap.Get(x, y) != targetValue)
         {
-            targetMap[x, y] = targetValue;
+            targetMap.Set(x, y, targetValue);
             q.Enqueue(Coord(x, y));
         }
     }
 
-    void Dilate(ref byte[,] map, ref byte[,] tmpMap, byte targetValue)
+    void Dilate(ref MapData map, ref MapData tmpMap, byte targetValue)
     {
         for (int x = 0; x < Width; x++)
             for (int y = 0; y < Height; y++)
@@ -363,18 +372,18 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
                 var neighbourWallTiles = GetSurroundingWallCount(map, x, y, targetValue);
                 if (neighbourWallTiles > 1)
                 {
-                    tmpMap[x, y] = targetValue;
+                    tmpMap.Set(x, y, targetValue);
                 }
                 else
                 {
-                    tmpMap[x, y] = map[x, y];
+                    tmpMap.Set(x, y, map.Get(x, y));
                 }
             }
 
         Swap(ref map, ref tmpMap);
     }
 
-    void Smooth(ref byte[,] map, ref byte[,] tmpMap, byte targetValue)
+    void Smooth(ref MapData map, ref MapData tmpMap, byte targetValue)
     {
         for (int x = 0; x < Width; x++)
             for (int y = 0; y < Height; y++)
@@ -382,22 +391,22 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
                 var neighbourWallTiles = GetSurroundingWallCount(map, x, y, targetValue);
                 if (neighbourWallTiles > 4)
                 {
-                    tmpMap[x, y] = targetValue;
+                    tmpMap.Set(x, y, targetValue);
                 }
                 else if (neighbourWallTiles < 4)
                 {
-                    tmpMap[x, y] = 0;
+                    tmpMap.Set(x, y, 0);
                 }
                 else
                 {
-                    tmpMap[x, y] = map[x, y];
+                    tmpMap.Set(x, y, map.Get(x, y));
                 }
             }
 
         Swap(ref map, ref tmpMap);
     }
 
-    int GetSurroundingWallCount(byte[,] map, int x, int y, byte targetValue)
+    int GetSurroundingWallCount(MapData map, int x, int y, byte targetValue)
     {
         int wallCount = 0;
         for (int nX = x - 1; nX <= x + 1; nX++)
@@ -413,20 +422,16 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
                 }
                 else
                 {
-                    wallCount += map[nX, nY] == targetValue ? 1 : 0;
+                    wallCount += map.Get(nX, nY) == targetValue ? 1 : 0;
                 }
             }
         return wallCount;
     }
 
-    private bool IsSolidAt(byte[,] mapData, int sx, int x, int y)
-    {
-        return mapData[x, y] > 0;
-    }
-
-    private void WriteMapToCollisionMesh(byte[,] map, Mesh mesh)
+    private void WriteMapToCollisionMesh(MapData map, Mesh mesh)
     {
         Debug.Log("WriteMapToCollisionMesh " + Width + " " + Height);
+        Profiler.BeginSample("WriteMapToCollisionMesh");
 
         var sx = Width;
         //auto sy = (int32)Size.Y;
@@ -438,6 +443,7 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
         var left = 1;
         var bottom = 1;
 
+        Profiler.BeginSample("Main loop");
         // ref: https://en.wikipedia.org/wiki/Marching_squares
         for (int mapY = 0; mapY < sy - 1; mapY++)
         {
@@ -445,20 +451,14 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
             {
                 var cell = 0;
 
-                if (IsSolidAt(map, sx, mapX, mapY)) { cell += 1; }
-                if (IsSolidAt(map, sx, mapX + 1, mapY)) { cell += 2; }
-                if (IsSolidAt(map, sx, mapX + 1, mapY + 1)) { cell += 4; }
-                if (IsSolidAt(map, sx, mapX, mapY + 1)) { cell += 8; }
+                Profiler.BeginSample("IsSolidAt checks");
+                if (map.Get(mapX, mapY) > 0) { cell += 1; }
+                if (map.Get(mapX + 1, mapY) > 0) { cell += 2; }
+                if (map.Get(mapX + 1, mapY + 1) > 0) { cell += 4; }
+                if (map.Get(mapX, mapY+1) > 0) { cell += 8; }
+                Profiler.EndSample();
 
-                var cellLeftInner   = new Vector3(left + mapX - 0.5f, bottom + mapY       , -1);
-                var cellLeftOuter   = new Vector3(left + mapX - 0.5f, bottom + mapY       , +1);
-                var cellBottomInner = new Vector3(left + mapX,        bottom + mapY - 0.5f, -1);
-                var cellBottomOuter = new Vector3(left + mapX,        bottom + mapY - 0.5f, +1);
-                var cellRightInner  = new Vector3(left + mapX + 0.5f, bottom + mapY       , -1);
-                var cellRightOuter  = new Vector3(left + mapX + 0.5f, bottom + mapY       , +1);
-                var cellTopInner    = new Vector3(left + mapX,        bottom + mapY + 0.5f, -1);
-                var cellTopOuter    = new Vector3(left + mapX,        bottom + mapY + 0.5f, +1);
-
+                Profiler.BeginSample("Marching cubes switch");
                 // +8  +4
                 //
                 // +1  +2
@@ -467,58 +467,128 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
                     case 0: // 0b0000:
                         break;
                     case 1: // 0b0001:
-                        BuildQuad(vertices, triangles, cellBottomInner, cellLeftInner, cellLeftOuter, cellBottomOuter);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1));
                         break;
                     case 2: // 0b0010:
-                        BuildQuad(vertices, triangles, cellBottomInner, cellBottomOuter, cellRightOuter, cellRightInner);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1));
                         break;
                     case 3: // 0b0011:
-                        BuildQuad(vertices, triangles, cellRightInner, cellLeftInner, cellLeftOuter, cellRightOuter);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1));
                         break;
                     case 4: // 0b0100:
-                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellTopOuter, cellTopInner);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1));
                         break;
                     case 5: // 0b0101:
-                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellBottomOuter, cellBottomInner);
-                        BuildQuad(vertices, triangles, cellLeftInner, cellLeftOuter, cellTopOuter, cellTopInner);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1));
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1));
                         break;
                     case 6: // 0b0110:
-                        BuildQuad(vertices, triangles, cellTopInner, cellBottomInner, cellBottomOuter, cellTopOuter);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1));
                         break;
                     case 7: // 0b0111:
-                        BuildQuad(vertices, triangles, cellLeftInner, cellLeftOuter, cellTopOuter, cellTopInner);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1));
                         break;
                     case 8: // 0b1000:
-                        BuildQuad(vertices, triangles, cellLeftInner, cellTopInner, cellTopOuter, cellLeftOuter);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1));
                         break;
                     case 9: // 0b1001:
-                        BuildQuad(vertices, triangles, cellTopInner, cellTopOuter, cellBottomOuter, cellBottomInner);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1));
                         break;
-                    case 10:// 0b1010:
-                        BuildQuad(vertices, triangles, cellBottomInner, cellBottomOuter, cellLeftOuter, cellLeftInner);
-                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellTopOuter, cellTopInner);
+                    case 10: // 0b1010:
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1));
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1));
                         break;
                     case 11: // 0b1011:
-                        BuildQuad(vertices, triangles, cellRightInner, cellTopInner, cellTopOuter, cellRightOuter);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1),
+                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1));
                         break;
                     case 12: // 0b1100:
-                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellLeftOuter, cellLeftInner);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1));
                         break;
                     case 13: // 0b1101:
-                        BuildQuad(vertices, triangles, cellRightInner, cellRightOuter, cellBottomOuter, cellBottomInner);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
+                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1));
                         break;
                     case 14: // 0b1110:
-                        BuildQuad(vertices, triangles, cellBottomInner, cellBottomOuter, cellLeftOuter, cellLeftInner);
+                        BuildQuad(vertices, triangles,
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1),
+                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
+                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1));
                         break;
                     case 15: // 0b1111:
                         break;
                 }
+                Profiler.EndSample();
             }
         }
+        Profiler.EndSample();
 
+        Profiler.BeginSample("Apply to mesh");
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals();
+        Profiler.EndSample();
+
+        Profiler.EndSample();
     }
 
     private void CreateDisplayMesh(Mesh mesh)
@@ -560,7 +630,7 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
         for (int x = 0; x < Width; x++)
             for (int y = 0; y < Height; y++)
             {
-                var mapValue = _map[x, y];
+                var mapValue = _map.Get(x, y);
                 if (mapValue == 0) { newColors[y * Width + x] = new Color32(0, 0, 0, 0); }
                 else { newColors[y * Width + x] = new Color32(mapValue, mapValue, mapValue, 255); }
             }
@@ -574,7 +644,7 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
     {
         Gizmos.matrix = transform.localToWorldMatrix;
 
-        if (_map == null)
+        if (_map == null || _map.Map == null || _map.Map.Length == 0)
         {
             Gizmos.color = Color.gray;
             Gizmos.DrawCube(new Vector3(Width/2, Height/2), new Vector3(Width, Height));

@@ -1,5 +1,9 @@
 add aiming reticle (read UI tutorials?)
 
+fire (raycast) shots after aiming
+
+fire (physics) shots with gravity
+
 improve map performance
  - explosion (more important)
  - initial map generation (less important)
