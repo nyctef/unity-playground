@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking.NetworkSystem;
-using Random = System.Random;
 using System.Xml.Linq;
 using UnityEngine.Profiling;
 using UnityEngine.Rendering;
@@ -15,81 +14,9 @@ public class WavyIslandMapGenerator : MonoBehaviour
     private const string MapDisplayName = "MapDisplay";
     // TODO: probably need to spam some unit tests on this to make sure we get all the edge cases correct for top-level get and set
 
-    // TODO: should these be structs or classes? Does it matter?
-
     // TODO: add a benchmarking project
 
-    public class MapChunk
-    {
-        public byte[] Chunk;
-        public int Width;
-        public int Height;
-        public int XOffset;
-        public int YOffset;
-
-        public void Init(int width, int height, int x, int y)
-        {
-            Width = width;
-            Height = height;
-            XOffset = x;
-            YOffset = y;
-            Chunk = new byte[width * height];
-        }
-
-        public byte Get(int x, int y)
-        {
-            return Chunk[y * Width + x];
-        }
-    }
     
-    public class MapData
-    {
-        public MapChunk[] MapChunks;
-        public int Width;
-        public int Height;
-        public readonly int ChunkSize = 200;
-        public int ChunksWide;
-        public int ChunksHigh;
-
-        public HashSet<int> ChangedChunkIndexes = new HashSet<int>();
-
-        public void Init(int width, int height)
-        {
-            Width = width;
-            Height = height;
-            ChunksWide = width / ChunkSize + (width % ChunkSize > 0 ? 1 : 0);
-            ChunksHigh = height / ChunkSize + (height % ChunkSize > 0 ? 1 : 0);
-
-            MapChunks = new MapChunk[ChunksWide * ChunksHigh];
-            for (int x = 0; x < ChunksWide; x++)
-            for (int y = 0; y < ChunksHigh; y++)
-            {
-                int i = y * ChunksWide + x;
-                MapChunks[i] = new MapChunk();
-                MapChunks[i].Init(ChunkSize, ChunkSize, x * ChunkSize, y * ChunkSize);
-            }
-        }
-
-        public byte Get(int x, int y)
-        {
-            var chunkX = x / ChunkSize;
-            var chunkY = y / ChunkSize;
-            var pixelX = x % ChunkSize;
-            var pixelY = y % ChunkSize;
-            return MapChunks[chunkY * ChunksWide + chunkX].Chunk[pixelY * ChunkSize + pixelX];
-        }
-
-        public void Set(int x, int y, byte value)
-        {
-            var chunkX = x / ChunkSize;
-            var chunkY = y / ChunkSize;
-            var pixelX = x % ChunkSize;
-            var pixelY = y % ChunkSize;
-            var chunkIndex = chunkY * ChunksWide + chunkX;
-            ChangedChunkIndexes.Add(chunkIndex);
-            MapChunks[chunkIndex].Chunk[pixelY * ChunkSize + pixelX] = value;
-        }
-    }
 
     public int Width = 512;
     public int Height = 128;
@@ -181,66 +108,31 @@ public class WavyIslandMapGenerator : MonoBehaviour
 
     IEnumerator GenerateMap()
     {
-        if (UseRandomSeed)
+        var options = new WavyIslandMapGenerationOptions()
         {
-            Seed = (int)(Time.time * 1000);
-        }
+            Seed = Seed,
+            PerlinScale = PerlinScale,
+            PerlinThreshold = PerlinThreshold,
+            SmoothPasses = SmoothPasses,
+            DilatePasses = DilatePasses,
+            Width = Width,
+            Height = Height
+        };
 
-        Debug.Log("WavyIslandMapGenerator GenerateMap with seed " + Seed, this);
-
-        Debug.Log("map create");
-        _map = new MapData();
-        _map.Init(Width, Height);
-
-        if (ShowNoiseGeneration) { yield return AnimationPause(); }
-
-        Debug.Log("fill map");
-        RandomFillMap(ref _map);
-
-        if (ShowNoiseGeneration) { yield return AnimationPause(); }
-
-        Debug.Log("threshold map");
-        ThresholdMap(ref _map);
-
-        if (ShowNoiseGeneration) { yield return AnimationPause(); }
-
-        var tmpMap = new MapData();
-        tmpMap.Init(Width, Height);
-
-        Debug.Log("pick islands");
-        PickIslands(ref _map, ref tmpMap);
-
-        if (ShowNoiseGeneration) { yield return AnimationPause(); }
-
-        for (int i = 0; i < DilatePasses; i++)
+        var generation = GeneratesWavyIslandMaps.GenerateMap(options);
+        while (generation.MoveNext())
         {
-            Debug.Log("dilate");
-            Dilate(ref _map, ref tmpMap, 128);
-
-            if (ShowNoiseGeneration) { yield return AnimationPause(); }
-        }
-
-        for (int i = 0; i < SmoothPasses; i++)
-        {
-            Debug.Log("smooth");
-            Smooth(ref _map, ref tmpMap, 128);
-
-            if (ShowNoiseGeneration) { yield return AnimationPause(); }
+            _map = generation.Current;
         }
 
         ClearChildren();
         AddCollisionMesh();
         AddDisplayMesh();
 
-        Debug.Log("done");
+        yield break;
+
     }
 
-    private WaitForSeconds AnimationPause()
-    {
-        ClearChildren();
-        AddDisplayMesh();
-        return new WaitForSeconds(AnimationDelay);
-    }
 
     private void RemoveDisplayMesh()
     {
@@ -298,9 +190,8 @@ public class WavyIslandMapGenerator : MonoBehaviour
         Profiler.BeginSample("WavyIslandMapGenerator.AddCollisionMesh");
 
         Debug.Log("Writing map to mesh");
-        for (var i = 0; i < chunkIdsToUpdate.Length; i++)
+        foreach (var chunkIndex in chunkIdsToUpdate)
         {
-            var chunkIndex = chunkIdsToUpdate[i];
             var chunk = _map.MapChunks[chunkIndex];
             var collisionMesh = new Mesh { indexFormat = IndexFormat.UInt32 };
             WriteMapToCollisionMesh(chunk, collisionMesh);
@@ -333,198 +224,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
         Profiler.EndSample();
     }
 
-    void RandomFillMap(ref MapData map)
-    {
-        int perlinSeed = new Random(Seed).Next();
-        int perlinXOffset = perlinSeed & 0xFF;
-        int perlinYOffset = perlinSeed >> 15;
 
-        for (int x = 0; x < Width; x++)
-        for (int y = 0; y < Height; y++)
-        {
-            if (y == 0)
-            {
-                map.Set(x, y, 255);
-            }
-            else
-            {
-                float perlin = Mathf.PerlinNoise(
-                    perlinXOffset + PerlinScale * (x / 1.0f),
-                    perlinYOffset + PerlinScale * (y / 1.0f));
-
-                    // apply "turbulence" to the perlin noise
-                    perlin = Mathf.Abs(perlin - 0.5f) * 2;
-
-                map.Set(x, y, (byte) (perlin * 255));
-            }
-        }
-    }
-
-    void ThresholdMap(ref MapData map)
-    {
-        var threshold = (byte)(PerlinThreshold * 255);
-
-        for (int x = 0; x < Width; x++)
-            for (int y = 0; y < Height; y++)
-            {
-                if (map.Get(x,y) > threshold)
-                {
-                    map.Set(x, y, 255);
-                }
-                else
-                {
-                    map.Set(x, y, 0);
-                }
-            }
-    }
-
-    void PickIslands(ref MapData map, ref MapData tmpMap)
-    {
-        var fillLineHeights = new[] {20, 50, 100, 200};
-        foreach (var fillLineHeight in fillLineHeights)
-        {
-            for (var x = 0; x < Width; x++)
-            {
-                FloodFill(map, tmpMap, 255, 128, x, fillLineHeight);
-            }
-        }
-
-        Swap(ref map, ref tmpMap);
-    }
-
-    private static void Swap(ref MapData map, ref MapData tmpMap)
-    {
-        var swap = map;
-        map = tmpMap;
-        tmpMap = swap;
-    }
-
-    private struct Coordinate
-    {
-        public int x;
-        public int y;
-    }
-
-    private Coordinate Coord(int x, int y)
-    {
-        return new Coordinate { x = x, y = y };
-    }
-
-    void FloodFill(MapData sourceMap, MapData targetMap, byte sourceValue, byte targetValue, int startx, int starty)
-    {
-        if (startx < 0 || startx >= Width || starty < 0 || starty >= Width)
-        {
-            Debug.Log("FloodFill off the edge of the map");
-            return;
-        }
-        if (sourceValue == targetValue)
-        {
-            Debug.Log("FloodFill source==targetvalue");
-            return;
-        }
-        if (sourceMap.Get(startx, starty) != sourceValue)
-        {
-            //Debug.Log("FloodFill sourceMap at " + startx + "," + starty + " is not " + sourceValue);
-            return;
-        }
-        if (targetMap.Get(startx, starty) == targetValue)
-        {
-            //Debug.Log("FloodFill targetMap at " + startx + "," + starty + " is already " + targetValue);
-            return;
-        }
-
-        targetMap.Set(startx, starty, targetValue);
-
-        var q = new Queue<Coordinate>();
-        q.Enqueue(Coord(startx,starty));
-        while (q.Any())
-        {
-            // TODO this probably won't be significantly slow, but if it is try optimisation from wp:
-            // Most practical implementations use a loop for the west and east directions as an optimization to avoid the overhead of stack or queue management
-
-            var next = q.Dequeue();
-            var x = next.x;
-            var y = next.y;
-            Fill(sourceMap, targetMap, sourceValue, targetValue, q, x+1, y);
-            Fill(sourceMap, targetMap, sourceValue, targetValue, q, x-1, y);
-            Fill(sourceMap, targetMap, sourceValue, targetValue, q, x, y+1);
-            Fill(sourceMap, targetMap, sourceValue, targetValue, q, x, y-1);
-        }
-    }
-
-    private void Fill(MapData sourceMap, MapData targetMap, byte sourceValue, byte targetValue, Queue<Coordinate> q, int x, int y)
-    {
-        if (x < 0 || x >= Width || y < 0 || y >= Height) { return; }
-        if (sourceMap.Get(x,y) == sourceValue && targetMap.Get(x, y) != targetValue)
-        {
-            targetMap.Set(x, y, targetValue);
-            q.Enqueue(Coord(x, y));
-        }
-    }
-
-    void Dilate(ref MapData map, ref MapData tmpMap, byte targetValue)
-    {
-        for (int x = 0; x < Width; x++)
-            for (int y = 0; y < Height; y++)
-            {
-                var neighbourWallTiles = GetSurroundingWallCount(map, x, y, targetValue);
-                if (neighbourWallTiles > 1)
-                {
-                    tmpMap.Set(x, y, targetValue);
-                }
-                else
-                {
-                    tmpMap.Set(x, y, map.Get(x, y));
-                }
-            }
-
-        Swap(ref map, ref tmpMap);
-    }
-
-    void Smooth(ref MapData map, ref MapData tmpMap, byte targetValue)
-    {
-        for (int x = 0; x < Width; x++)
-            for (int y = 0; y < Height; y++)
-            {
-                var neighbourWallTiles = GetSurroundingWallCount(map, x, y, targetValue);
-                if (neighbourWallTiles > 4)
-                {
-                    tmpMap.Set(x, y, targetValue);
-                }
-                else if (neighbourWallTiles < 4)
-                {
-                    tmpMap.Set(x, y, 0);
-                }
-                else
-                {
-                    tmpMap.Set(x, y, map.Get(x, y));
-                }
-            }
-
-        Swap(ref map, ref tmpMap);
-    }
-
-    int GetSurroundingWallCount(MapData map, int x, int y, byte targetValue)
-    {
-        int wallCount = 0;
-        for (int nX = x - 1; nX <= x + 1; nX++)
-            for (int nY = y - 1; nY <= y + 1; nY++)
-            {
-                if (nX == nY)
-                {
-                    continue;
-                }
-                if (nX < 0 || nX >= Width || nY < 0 || nY >= Height)
-                {
-                    if (nY < 0) { wallCount++; }
-                }
-                else
-                {
-                    wallCount += map.Get(nX, nY) == targetValue ? 1 : 0;
-                }
-            }
-        return wallCount;
-    }
 
     private void WriteMapToCollisionMesh(MapChunk chunk, Mesh mesh)
     {
@@ -736,6 +436,13 @@ public class WavyIslandMapGenerator : MonoBehaviour
         texture.Apply();
 
         return texture;
+    }
+
+    private WaitForSeconds AnimationPause()
+    {
+        ClearChildren();
+        AddDisplayMesh();
+        return new WaitForSeconds(AnimationDelay);
     }
 
     void OnDrawGizmos()
