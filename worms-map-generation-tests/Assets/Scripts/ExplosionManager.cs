@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class ExplosionManager : MonoBehaviour
 {
+    public GameObject Explosion50;
+
     void OnEnable()
     {
         EventManager.Instance.StartListening<Events.Explosion>(OnExplosion);
@@ -16,6 +18,7 @@ public class ExplosionManager : MonoBehaviour
 
     private void OnExplosion(Events.Explosion explosion)
     {
-        // TODO spawn an explosion sprite and some particles
+        // TODO add some particles and other effects
+        Instantiate(Explosion50, explosion.worldSpacePosition, Quaternion.identity);
     }
 }

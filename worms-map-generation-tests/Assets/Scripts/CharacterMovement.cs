@@ -35,7 +35,7 @@ public class CharacterMovement : MonoBehaviour
 
         if (explodeInput)
         {
-            EventManager.Instance.TriggerEvent(new Events.Explosion(transform.position, 55));
+            EventManager.Instance.TriggerEvent(new Events.Explosion(transform.position, 50));
         }
 
         var move = new Vector3(horizontalInput, 0, 0) * Time.deltaTime * Speed;
