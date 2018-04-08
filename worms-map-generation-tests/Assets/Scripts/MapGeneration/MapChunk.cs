@@ -1,7 +1,9 @@
-﻿public class MapChunk
+﻿using System.Collections;
+
+public class MapChunk
 {
 // TODO: should these be structs or classes? Does it matter?
-    public byte[] Chunk;
+    public BitArray Chunk;
     public int Width;
     public int Height;
     public int XOffset;
@@ -13,10 +15,10 @@
         Height = height;
         XOffset = x;
         YOffset = y;
-        Chunk = new byte[width * height];
+        Chunk = new BitArray(width * height);
     }
 
-    public byte Get(int x, int y)
+    public bool Get(int x, int y)
     {
         return Chunk[y * Width + x];
     }

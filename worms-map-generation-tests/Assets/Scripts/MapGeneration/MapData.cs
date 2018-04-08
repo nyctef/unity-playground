@@ -28,7 +28,7 @@ public class MapData
         }
     }
 
-    public byte Get(int x, int y)
+    public bool Get(int x, int y)
     {
         var chunkX = x / ChunkSize;
         var chunkY = y / ChunkSize;
@@ -37,7 +37,7 @@ public class MapData
         return MapChunks[chunkY * ChunksWide + chunkX].Chunk[pixelY * ChunkSize + pixelX];
     }
 
-    public void Set(int x, int y, byte value)
+    public void Set(int x, int y, bool value)
     {
         var chunkX = x / ChunkSize;
         var chunkY = y / ChunkSize;

@@ -10,18 +10,15 @@ public static class GeneratesWavyIslandMaps
         Debug.Log("WavyIslandMapGenerator GenerateMap with seed " + options.Seed);
 
         Debug.Log("map create");
-        var map = new MapData();
-        map.Init(options.Width, options.Height);
 
-        yield return map;
 
         Debug.Log("fill map");
-        RandomFillMap(ref map, options);
+        var noiseData = RandomFillMap(options);
 
-        yield return map;
+        // TODO: display noise map somehow?
 
         Debug.Log("threshold map");
-        ThresholdMap(ref map, options);
+        var map = ThresholdMap(noiseData, options);
 
         yield return map;
 
@@ -36,7 +33,7 @@ public static class GeneratesWavyIslandMaps
         for (int i = 0; i < options.DilatePasses; i++)
         {
             Debug.Log("dilate");
-            Dilate(ref map, ref tmpMap, 128, options);
+            Dilate(ref map, ref tmpMap, true, options);
 
             yield return map;
         }
@@ -44,7 +41,7 @@ public static class GeneratesWavyIslandMaps
         for (int i = 0; i < options.SmoothPasses; i++)
         {
             Debug.Log("smooth");
-            Smooth(ref map, ref tmpMap, 128, options);
+            Smooth(ref map, ref tmpMap, true, options);
 
             yield return map;
         }
@@ -53,18 +50,20 @@ public static class GeneratesWavyIslandMaps
         yield return map;
     }
 
-    static void RandomFillMap(ref MapData map, WavyIslandMapGenerationOptions options)
+    static byte[] RandomFillMap(WavyIslandMapGenerationOptions options)
     {
         int perlinSeed = new Random(options.Seed).Next();
         int perlinXOffset = perlinSeed & 0xFF;
         int perlinYOffset = perlinSeed >> 15;
+
+        var noiseData = new byte[options.Width * options.Height];
 
         for (int x = 0; x < options.Width; x++)
         for (int y = 0; y < options.Height; y++)
         {
             if (y == 0)
             {
-                map.Set(x, y, 255);
+                noiseData[y*options.Width + x] = 255;
             }
             else
             {
@@ -75,9 +74,11 @@ public static class GeneratesWavyIslandMaps
                 // apply "turbulence" to the perlin noise
                 perlin = Mathf.Abs(perlin - 0.5f) * 2;
 
-                map.Set(x, y, (byte)(perlin * 255));
+                noiseData[y * options.Width + x] = (byte)(perlin * 255);
             }
         }
+
+        return noiseData;
     }
 
     private static void Swap(ref MapData map, ref MapData tmpMap)
@@ -87,36 +88,41 @@ public static class GeneratesWavyIslandMaps
         tmpMap = swap;
     }
 
-    static void ThresholdMap(ref MapData map, WavyIslandMapGenerationOptions options)
+    static MapData ThresholdMap(byte[] noiseData, WavyIslandMapGenerationOptions options)
     {
+        var map = new MapData();
+        map.Init(options.Width, options.Height);
+
         var threshold = (byte)(options.PerlinThreshold * 255);
 
         for (int x = 0; x < options.Width; x++)
         for (int y = 0; y < options.Height; y++)
         {
-            if (map.Get(x, y) > threshold)
+            if (noiseData[y*options.Width + x] > threshold)
             {
-                map.Set(x, y, 255);
+                map.Set(x, y, true);
             }
             else
             {
-                map.Set(x, y, 0);
+                map.Set(x, y, false);
             }
         }
+
+        return map;
     }
 
-    static void FloodFill(MapData sourceMap, MapData targetMap, byte sourceValue, byte targetValue, int startx, int starty)
+    static void FloodFill(MapData sourceMap, MapData targetMap, bool sourceValue, bool targetValue, int startx, int starty)
     {
         if (startx < 0 || startx >= sourceMap.Width || starty < 0 || starty >= sourceMap.Width)
         {
             Debug.LogWarning("FloodFill off the edge of the map");
             return;
         }
-        if (sourceValue == targetValue)
-        {
-            Debug.LogWarning("FloodFill source==targetvalue");
-            return;
-        }
+        //if (sourceValue == targetValue)
+        //{
+        //    Debug.LogWarning("FloodFill source==targetvalue");
+        //    return;
+        //}
         if (sourceMap.Width != targetMap.Width || sourceMap.Height != targetMap.Height)
         {
             Debug.LogWarning("maps different sizes");
@@ -152,7 +158,7 @@ public static class GeneratesWavyIslandMaps
         }
     }
 
-    private static void Fill(MapData sourceMap, MapData targetMap, byte sourceValue, byte targetValue, Queue<Coordinate> q, int x, int y)
+    private static void Fill(MapData sourceMap, MapData targetMap, bool sourceValue, bool targetValue, Queue<Coordinate> q, int x, int y)
     {
         if (x < 0 || x >= sourceMap.Width || y < 0 || y >= sourceMap.Height) { return; }
         if (sourceMap.Get(x, y) == sourceValue && targetMap.Get(x, y) != targetValue)
@@ -173,7 +179,7 @@ public static class GeneratesWavyIslandMaps
         return new Coordinate { x = x, y = y };
     }
 
-    static void Dilate(ref MapData map, ref MapData tmpMap, byte targetValue, WavyIslandMapGenerationOptions options)
+    static void Dilate(ref MapData map, ref MapData tmpMap, bool targetValue, WavyIslandMapGenerationOptions options)
     {
         for (int x = 0; x < options.Width; x++)
         for (int y = 0; y < options.Height; y++)
@@ -192,7 +198,7 @@ public static class GeneratesWavyIslandMaps
         Swap(ref map, ref tmpMap);
     }
 
-    static void Smooth(ref MapData map, ref MapData tmpMap, byte targetValue, WavyIslandMapGenerationOptions options)
+    static void Smooth(ref MapData map, ref MapData tmpMap, bool targetValue, WavyIslandMapGenerationOptions options)
     {
         for (int x = 0; x < options.Width; x++)
         for (int y = 0; y < options.Height; y++)
@@ -204,7 +210,7 @@ public static class GeneratesWavyIslandMaps
             }
             else if (neighbourWallTiles < 4)
             {
-                tmpMap.Set(x, y, 0);
+                tmpMap.Set(x, y, false);
             }
             else
             {
@@ -215,7 +221,7 @@ public static class GeneratesWavyIslandMaps
         Swap(ref map, ref tmpMap);
     }
 
-    static int GetSurroundingWallCount(MapData map, int x, int y, byte targetValue)
+    static int GetSurroundingWallCount(MapData map, int x, int y, bool targetValue)
     {
         int wallCount = 0;
         for (int nX = x - 1; nX <= x + 1; nX++)
@@ -244,7 +250,7 @@ public static class GeneratesWavyIslandMaps
         {
             for (var x = 0; x < map.Width; x++)
             {
-                FloodFill(map, tmpMap, 255, 128, x, fillLineHeight);
+                FloodFill(map, tmpMap, true, true, x, fillLineHeight);
             }
         }
 
