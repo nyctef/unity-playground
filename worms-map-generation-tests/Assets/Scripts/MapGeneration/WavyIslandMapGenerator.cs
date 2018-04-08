@@ -12,9 +12,15 @@ using UnityEngine.Rendering;
 
 public class WavyIslandMapGenerator : MonoBehaviour
 {
-    public class MapData
+    // TODO: probably need to spam some unit tests on this to make sure we get all the edge cases correct for top-level get and set
+
+    // TODO: should these be structs or classes? Does it matter?
+
+    // TODO: add a benchmarking project
+
+    public class MapChunk
     {
-        public byte[] Map;
+        public byte[] Chunk;
         public int Width;
         public int Height;
 
@@ -22,17 +28,50 @@ public class WavyIslandMapGenerator : MonoBehaviour
         {
             Width = width;
             Height = height;
-            Map = new byte[width * height];
+            Chunk = new byte[width * height];
+        }
+    }
+    
+    public class MapData
+    {
+        public MapChunk[] MapChunks;
+        public int Width;
+        public int Height;
+        public readonly int ChunkSize = 200;
+        public int ChunksWide;
+        public int ChunksHigh;
+
+        public void Init(int width, int height)
+        {
+            Width = width;
+            Height = height;
+            ChunksWide = width / ChunkSize + (width % ChunkSize > 0 ? 1 : 0);
+            ChunksHigh = height / ChunkSize + (height % ChunkSize > 0 ? 1 : 0);
+
+            MapChunks = new MapChunk[ChunksWide * ChunksHigh];
+            for (int i = 0; i < ChunksWide * ChunksHigh; i++)
+            {
+                MapChunks[i] = new MapChunk();
+                MapChunks[i].Init(ChunkSize, ChunkSize);
+            }
         }
 
         public byte Get(int x, int y)
         {
-            return Map[y * Width + x];
+            var chunkX = x / ChunkSize;
+            var chunkY = y / ChunkSize;
+            var pixelX = x % ChunkSize;
+            var piyelY = y % ChunkSize;
+            return MapChunks[chunkY * ChunksWide + chunkX].Chunk[piyelY * ChunkSize + pixelX];
         }
 
         public void Set(int x, int y, byte value)
         {
-            Map[y * Width + x] = value;
+            var chunkX = x / ChunkSize;
+            var chunkY = y / ChunkSize;
+            var pixelX = x % ChunkSize;
+            var piyelY = y % ChunkSize;
+            MapChunks[chunkY * ChunksWide + chunkX].Chunk[piyelY * ChunkSize + pixelX] = value;
         }
     }
 
@@ -644,7 +683,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
     {
         Gizmos.matrix = transform.localToWorldMatrix;
 
-        if (_map == null || _map.Map == null || _map.Map.Length == 0)
+        if (_map == null)
         {
             Gizmos.color = Color.gray;
             Gizmos.DrawCube(new Vector3(Width/2, Height/2), new Vector3(Width, Height));
