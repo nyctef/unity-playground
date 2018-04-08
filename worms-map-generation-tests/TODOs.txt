@@ -1,6 +1,9 @@
-add explosion sprites
 add aiming reticle (read UI tutorials?)
-get sprite animation working at some point
+
+improve map performance
+ - explosion (more important)
+ - initial map generation (less important)
+
 kill player if they fall below a certain level
 
 more cell automata stuff
@@ -11,12 +14,12 @@ more cell automata stuff
 
 spawn player at an actual point on the map
  
-improve map performance
- - explosion (more important)
- - initial map generation (less important)
-
 map: once cell automata stuff is done then set remaining solid ground to texture values
 
 check out Unity 2018 beta for later C# support
 
 fix EventManager errors on shutdown
+
+add particles and more effects
+ - dust puffs when jumping and landing
+ - more explosion bits
