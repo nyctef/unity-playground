@@ -12,6 +12,7 @@ using UnityEngine.Rendering;
 
 public class WavyIslandMapGenerator : MonoBehaviour
 {
+    private const string MapDisplayName = "MapDisplay";
     // TODO: probably need to spam some unit tests on this to make sure we get all the edge cases correct for top-level get and set
 
     // TODO: should these be structs or classes? Does it matter?
@@ -23,12 +24,21 @@ public class WavyIslandMapGenerator : MonoBehaviour
         public byte[] Chunk;
         public int Width;
         public int Height;
+        public int XOffset;
+        public int YOffset;
 
-        public void Init(int width, int height)
+        public void Init(int width, int height, int x, int y)
         {
             Width = width;
             Height = height;
+            XOffset = x;
+            YOffset = y;
             Chunk = new byte[width * height];
+        }
+
+        public byte Get(int x, int y)
+        {
+            return Chunk[y * Width + x];
         }
     }
     
@@ -41,6 +51,8 @@ public class WavyIslandMapGenerator : MonoBehaviour
         public int ChunksWide;
         public int ChunksHigh;
 
+        public HashSet<int> ChangedChunkIndexes = new HashSet<int>();
+
         public void Init(int width, int height)
         {
             Width = width;
@@ -49,10 +61,12 @@ public class WavyIslandMapGenerator : MonoBehaviour
             ChunksHigh = height / ChunkSize + (height % ChunkSize > 0 ? 1 : 0);
 
             MapChunks = new MapChunk[ChunksWide * ChunksHigh];
-            for (int i = 0; i < ChunksWide * ChunksHigh; i++)
+            for (int x = 0; x < ChunksWide; x++)
+            for (int y = 0; y < ChunksHigh; y++)
             {
+                int i = y * ChunksWide + x;
                 MapChunks[i] = new MapChunk();
-                MapChunks[i].Init(ChunkSize, ChunkSize);
+                MapChunks[i].Init(ChunkSize, ChunkSize, x * ChunkSize, y * ChunkSize);
             }
         }
 
@@ -71,7 +85,9 @@ public class WavyIslandMapGenerator : MonoBehaviour
             var chunkY = y / ChunkSize;
             var pixelX = x % ChunkSize;
             var piyelY = y % ChunkSize;
-            MapChunks[chunkY * ChunksWide + chunkX].Chunk[piyelY * ChunkSize + pixelX] = value;
+            var chunkIndex = chunkY * ChunksWide + chunkX;
+            ChangedChunkIndexes.Add(chunkIndex);
+            MapChunks[chunkIndex].Chunk[piyelY * ChunkSize + pixelX] = value;
         }
     }
 
@@ -126,6 +142,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
     private void RemoveCircle(MapData map, Vector3 localSpace, int explosionRadius)
     {
         int pixelsCleared = 0;
+        map.ChangedChunkIndexes.Clear();
         for (int ex = -explosionRadius; ex < +explosionRadius; ex++)
         for (int ey = -explosionRadius; ey < +explosionRadius; ey++)
         {
@@ -144,11 +161,13 @@ public class WavyIslandMapGenerator : MonoBehaviour
             pixelsCleared++;
         }
 
-        ClearChildren();
-        AddCollisionMesh();
+        var chunkIdsToUpdate = map.ChangedChunkIndexes.ToArray();
+
+        UpdateCollisionMeshes(chunkIdsToUpdate);
+        RemoveDisplayMesh();
         AddDisplayMesh();
 
-        Debug.Log("RemoveCircle " + localSpace + " " + explosionRadius + " pixelsCleared: "+pixelsCleared);
+        Debug.Log("RemoveCircle " + localSpace + " " + explosionRadius + " pixelsCleared: "+pixelsCleared + " chunkIdsToUpdate " + String.Join(",", chunkIdsToUpdate.Select(x => x.ToString()).ToArray()));
     }
 
     void Update()
@@ -223,6 +242,12 @@ public class WavyIslandMapGenerator : MonoBehaviour
         return new WaitForSeconds(AnimationDelay);
     }
 
+    private void RemoveDisplayMesh()
+    {
+        var displayMesh = transform.Find(MapDisplayName);
+        Destroy(displayMesh.gameObject);
+    }
+
     private void AddDisplayMesh()
     {
         Profiler.BeginSample("WavyIslandMapGenerator.AddDisplayMesh");
@@ -230,7 +255,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
         var displayMesh = new Mesh();
         CreateDisplayMesh(displayMesh);
 
-        var mapDisplay = new GameObject("MapDisplay", typeof(MeshFilter), typeof(MeshRenderer));
+        var mapDisplay = new GameObject(MapDisplayName, typeof(MeshFilter), typeof(MeshRenderer));
         mapDisplay.transform.SetParent(transform, false);
         var displayMeshFilter = mapDisplay.RequireComponent<MeshFilter>();
         displayMeshFilter.mesh = displayMesh;
@@ -248,16 +273,50 @@ public class WavyIslandMapGenerator : MonoBehaviour
         Profiler.BeginSample("WavyIslandMapGenerator.AddCollisionMesh");
 
         Debug.Log("Writing map to mesh");
-        var collisionMesh = new Mesh {indexFormat = IndexFormat.UInt32};
-        WriteMapToCollisionMesh(_map, collisionMesh);
+        for (var i = 0; i < _map.MapChunks.Length; i++)
+        {
+            var chunk = _map.MapChunks[i];
+            var collisionMesh = new Mesh {indexFormat = IndexFormat.UInt32};
+            WriteMapToCollisionMesh(chunk, collisionMesh);
 
-        var mapCollision =
-            new GameObject("MapCollision", typeof(MeshFilter), typeof(MeshCollider) /*, typeof(MeshRenderer)*/);
-        mapCollision.transform.SetParent(transform, false);
-        var meshFilter = mapCollision.RequireComponent<MeshFilter>();
-        meshFilter.mesh = collisionMesh;
-        var meshCollider = mapCollision.RequireComponent<MeshCollider>();
-        meshCollider.sharedMesh = collisionMesh;
+            var mapCollisionName = "MapCollision_"+i;
+            var mapCollision =
+                new GameObject(mapCollisionName, typeof(MeshFilter), typeof(MeshCollider) /*, typeof(MeshRenderer)*/);
+            mapCollision.transform.SetParent(transform, false);
+            var meshFilter = mapCollision.RequireComponent<MeshFilter>();
+            meshFilter.mesh = collisionMesh;
+            var meshCollider = mapCollision.RequireComponent<MeshCollider>();
+            meshCollider.sharedMesh = collisionMesh;
+        }
+
+        Profiler.EndSample();
+    }
+
+    private void UpdateCollisionMeshes(int[] chunkIdsToUpdate)
+    {
+        // TODO: we should be able to use CallerMemberName for something nicer with a later C# version
+        Profiler.BeginSample("WavyIslandMapGenerator.AddCollisionMesh");
+
+        Debug.Log("Writing map to mesh");
+        for (var i = 0; i < chunkIdsToUpdate.Length; i++)
+        {
+            var chunkIndex = chunkIdsToUpdate[i];
+            var chunk = _map.MapChunks[chunkIndex];
+            var collisionMesh = new Mesh { indexFormat = IndexFormat.UInt32 };
+            WriteMapToCollisionMesh(chunk, collisionMesh);
+
+            var mapCollisionName = "MapCollision_" + chunkIndex;
+            var oldMapCollision = transform.Find(mapCollisionName);
+            Destroy(oldMapCollision.gameObject);
+
+            var mapCollision =
+                new GameObject(mapCollisionName, typeof(MeshFilter), typeof(MeshCollider) /*, typeof(MeshRenderer)*/);
+            mapCollision.transform.SetParent(transform, false);
+            var meshFilter = mapCollision.RequireComponent<MeshFilter>();
+            meshFilter.mesh = collisionMesh;
+            var meshCollider = mapCollision.RequireComponent<MeshCollider>();
+            meshCollider.sharedMesh = collisionMesh;
+        }
 
         Profiler.EndSample();
     }
@@ -467,20 +526,20 @@ public class WavyIslandMapGenerator : MonoBehaviour
         return wallCount;
     }
 
-    private void WriteMapToCollisionMesh(MapData map, Mesh mesh)
+    private void WriteMapToCollisionMesh(MapChunk chunk, Mesh mesh)
     {
         Debug.Log("WriteMapToCollisionMesh " + Width + " " + Height);
         Profiler.BeginSample("WriteMapToCollisionMesh");
 
-        var sx = Width;
+        var sx = chunk.Width;
         //auto sy = (int32)Size.Y;
-        var sy = Height;
+        var sy = chunk.Height;
 
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
-        var left = 1;
-        var bottom = 1;
+        var left = 1+chunk.XOffset;
+        var bottom = 1+chunk.YOffset;
 
         Profiler.BeginSample("Main loop");
         // ref: https://en.wikipedia.org/wiki/Marching_squares
@@ -491,10 +550,10 @@ public class WavyIslandMapGenerator : MonoBehaviour
                 var cell = 0;
 
                 Profiler.BeginSample("IsSolidAt checks");
-                if (map.Get(mapX, mapY) > 0) { cell += 1; }
-                if (map.Get(mapX + 1, mapY) > 0) { cell += 2; }
-                if (map.Get(mapX + 1, mapY + 1) > 0) { cell += 4; }
-                if (map.Get(mapX, mapY+1) > 0) { cell += 8; }
+                if (chunk.Get(mapX, mapY) > 0) { cell += 1; }
+                if (chunk.Get(mapX + 1, mapY) > 0) { cell += 2; }
+                if (chunk.Get(mapX + 1, mapY + 1) > 0) { cell += 4; }
+                if (chunk.Get(mapX, mapY+1) > 0) { cell += 8; }
                 Profiler.EndSample();
 
                 Profiler.BeginSample("Marching cubes switch");
