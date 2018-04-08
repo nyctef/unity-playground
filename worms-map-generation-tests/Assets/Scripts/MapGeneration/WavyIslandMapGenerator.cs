@@ -59,23 +59,22 @@ public class WavyIslandMapGenerator : MonoBehaviour {
 
     private void RemoveCircle(byte[,] map, Vector3 localSpace, int explosionRadius)
     {
-        // todo fix so this is x and y instead of x and z
         int pixelsCleared = 0;
         for (int ex = -explosionRadius; ex < +explosionRadius; ex++)
-        for (int ez = -explosionRadius; ez < +explosionRadius; ez++)
+        for (int ey = -explosionRadius; ey < +explosionRadius; ey++)
         {
             var x = (int)localSpace.x + ex;
-            var z = (int)localSpace.z + ez;
-            if (x < 0 || x >= Width || z < 0 || z >= Height)
+            var y = (int)localSpace.y + ey;
+            if (x < 0 || x >= Width || y < 0 || y >= Height)
             {
                 continue;
             }
-            if (ex*ex + ez*ez > explosionRadius * explosionRadius)
+            if (ex*ex + ey*ey > explosionRadius * explosionRadius)
             {
                 continue;
             }
 
-            map[x, z] = 0;
+            map[x, y] = 0;
             pixelsCleared++;
         }
 
@@ -159,7 +158,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     private void AddDisplayMesh()
     {
         var displayMesh = new Mesh();
-        WriteMapToDisplayMesh(_map, displayMesh);
+        CreateDisplayMesh(displayMesh);
 
         var mapDisplay = new GameObject("MapDisplay", typeof(MeshFilter), typeof(MeshRenderer));
         mapDisplay.transform.SetParent(transform, false);
@@ -395,12 +394,10 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     private void WriteMapToCollisionMesh(byte[,] map, Mesh mesh)
     {
         Debug.Log("WriteMapToCollisionMesh " + Width + " " + Height);
-        var debugMaxZ = 0.0f;
-        var debugMaxX = 0.0f;
 
         var sx = Width;
         //auto sy = (int32)Size.Y;
-        var sz = Height;
+        var sy = Height;
 
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
@@ -409,30 +406,25 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         var bottom = 1;
 
         // ref: https://en.wikipedia.org/wiki/Marching_squares
-        for (int mapZ = 0; mapZ < sz - 1; mapZ++)
+        for (int mapY = 0; mapY < sy - 1; mapY++)
         {
             for (int mapX = 0; mapX < sx - 1; mapX++)
             {
                 var cell = 0;
 
-                if (IsSolidAt(map, sx, mapX, mapZ)) { cell += 1; }
-                if (IsSolidAt(map, sx, mapX + 1, mapZ)) { cell += 2; }
-                if (IsSolidAt(map, sx, mapX + 1, mapZ + 1)) { cell += 4; }
-                if (IsSolidAt(map, sx, mapX, mapZ + 1)) { cell += 8; }
+                if (IsSolidAt(map, sx, mapX, mapY)) { cell += 1; }
+                if (IsSolidAt(map, sx, mapX + 1, mapY)) { cell += 2; }
+                if (IsSolidAt(map, sx, mapX + 1, mapY + 1)) { cell += 4; }
+                if (IsSolidAt(map, sx, mapX, mapY + 1)) { cell += 8; }
 
-                // TODO: use correct axes so that we don't have to rotate this 90deg
-
-                var cellLeftInner   = new Vector3(left + mapX - 0.5f,  1, bottom + mapZ);
-                var cellLeftOuter   = new Vector3(left + mapX - 0.5f, -1, bottom + mapZ);
-                var cellBottomInner = new Vector3(left + mapX,         1, bottom + mapZ - 0.5f);
-                var cellBottomOuter = new Vector3(left + mapX,        -1, bottom + mapZ - 0.5f);
-                var cellRightInner  = new Vector3(left + mapX + 0.5f,  1, bottom + mapZ);
-                var cellRightOuter  = new Vector3(left + mapX + 0.5f, -1, bottom + mapZ);
-                var cellTopInner    = new Vector3(left + mapX,         1, bottom + mapZ + 0.5f);
-                var cellTopOuter    = new Vector3(left + mapX,        -1, bottom + mapZ + 0.5f);
-
-                debugMaxX = Mathf.Max(debugMaxX, mapX);
-                debugMaxZ = Mathf.Max(debugMaxZ, mapZ);
+                var cellLeftInner   = new Vector3(left + mapX - 0.5f, bottom + mapY       , -1);
+                var cellLeftOuter   = new Vector3(left + mapX - 0.5f, bottom + mapY       , +1);
+                var cellBottomInner = new Vector3(left + mapX,        bottom + mapY - 0.5f, -1);
+                var cellBottomOuter = new Vector3(left + mapX,        bottom + mapY - 0.5f, +1);
+                var cellRightInner  = new Vector3(left + mapX + 0.5f, bottom + mapY       , -1);
+                var cellRightOuter  = new Vector3(left + mapX + 0.5f, bottom + mapY       , +1);
+                var cellTopInner    = new Vector3(left + mapX,        bottom + mapY + 0.5f, -1);
+                var cellTopOuter    = new Vector3(left + mapX,        bottom + mapY + 0.5f, +1);
 
                 // +8  +4
                 //
@@ -491,26 +483,17 @@ public class WavyIslandMapGenerator : MonoBehaviour {
             }
         }
 
-        Debug.Log("maxx: " + debugMaxX + " maxz: " + debugMaxZ);
-        Debug.Log(vertices.Count);
-
-        // TODO: we end up with more than 64k vertices here so we need to split up into multiple meshes
-
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals();
     }
 
-    private void WriteMapToDisplayMesh(byte[,] map, Mesh mesh)
+    private void CreateDisplayMesh(Mesh mesh)
     {
-        var sx = Width;
-        //auto sy = (int32)Size.Y;
-        var sz = Height;
-
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
-        BuildQuad(vertices, triangles, new Vector3(), new Vector3(0, 0, Height), new Vector3(Width, 0, Height), new Vector3(Width, 0, 0));
+        BuildQuad(vertices, triangles, new Vector3(), new Vector3(0, Height), new Vector3(Width, Height), new Vector3(Width, 0));
 
         var uv = new[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };
 
@@ -561,7 +544,7 @@ public class WavyIslandMapGenerator : MonoBehaviour {
         if (_map == null)
         {
             Gizmos.color = Color.gray;
-            Gizmos.DrawCube(new Vector3(Width/2, 0, Height/2), new Vector3(Width, 0, Height));
+            Gizmos.DrawCube(new Vector3(Width/2, Height/2), new Vector3(Width, Height));
         }
     }
 }
