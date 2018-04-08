@@ -40,6 +40,11 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
 
     public void OnBeforeSerialize()
     {
+        if (_map == null)
+        {
+            return;
+        }
+
         _serializedMap = new byte[Width * Height];
         for (int x = 0; x < Width; x++)
         for (int y = 0; y < Height; y++)
@@ -50,6 +55,11 @@ public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackRecei
 
     public void OnAfterDeserialize()
     {
+        if (_serializedMap == null)
+        {
+            return;
+        }
+
         _map = new byte[Width, Height];
         for (int x = 0; x < Width; x++)
         for (int y = 0; y < Height; y++)
