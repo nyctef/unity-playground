@@ -4,9 +4,15 @@ fire (raycast) shots after aiming
 
 fire (physics) shots with gravity
 
+apply damage on explosions
+
+apply explosive force on explosions
+
 improve map performance
- - explosion (more important)
+ - explosion (more important) (done to some extent)
  - initial map generation (less important)
+
+investigate holes in collision mesh - caused by chunk boundaries?
 
 kill player if they fall below a certain level
 
