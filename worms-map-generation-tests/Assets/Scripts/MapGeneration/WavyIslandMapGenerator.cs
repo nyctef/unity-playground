@@ -9,7 +9,7 @@ using Random = System.Random;
 using System.Xml.Linq;
 using UnityEngine.Rendering;
 
-public class WavyIslandMapGenerator : MonoBehaviour {
+public class WavyIslandMapGenerator : MonoBehaviour, ISerializationCallbackReceiver {
 
     public int Width = 512;
     public int Height = 128;
@@ -35,7 +35,28 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     public bool ShowNoiseGeneration = true;
     //public bool ShowMeshGeneration = true;
 
-    [SerializeField] private byte[,] _map;
+    private byte[,] _map;
+    [SerializeField] private byte[] _serializedMap;
+
+    public void OnBeforeSerialize()
+    {
+        _serializedMap = new byte[Width * Height];
+        for (int x = 0; x < Width; x++)
+        for (int y = 0; y < Height; y++)
+        {
+            _serializedMap[y * Width + x] = _map[x, y];
+        }
+    }
+
+    public void OnAfterDeserialize()
+    {
+        _map = new byte[Width, Height];
+        for (int x = 0; x < Width; x++)
+        for (int y = 0; y < Height; y++)
+        {
+            _map[x,y] = _serializedMap[y*Width + x];
+        }
+    }
 
     void Start()
     {
