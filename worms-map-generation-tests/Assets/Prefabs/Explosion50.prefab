@@ -62,7 +62,7 @@ MonoBehaviour:
   - {fileID: 21300012, guid: 81d26fbcb817808449a4d2d7c9c6f258, type: 3}
   - {fileID: 21300014, guid: 81d26fbcb817808449a4d2d7c9c6f258, type: 3}
   - {fileID: 21300016, guid: 81d26fbcb817808449a4d2d7c9c6f258, type: 3}
-  FramesPerSec: 5
+  FramesPerSec: 15
 --- !u!212 &212523650205211860
 SpriteRenderer:
   m_ObjectHideFlags: 1
