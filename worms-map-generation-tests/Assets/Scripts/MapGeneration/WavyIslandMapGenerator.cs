@@ -86,8 +86,8 @@ public class WavyIslandMapGenerator : MonoBehaviour
         //RemoveDisplayMesh();
         //AddDisplayMesh();
 
-        var displayMesh = transform.Find(MapDisplayName).gameObject;
-        var mapTexture = (Texture2D)displayMesh.GetComponent<Renderer>().material.mainTexture;
+        // TODO this is probably a little fragile
+        var mapTexture = (Texture2D)transform.Find(MapDisplayName).gameObject.GetComponent<Renderer>().material.mainTexture;
 
         RemoveCircleFromMapTexture(mapTexture, localSpace, explosionRadius);
 
@@ -440,6 +440,9 @@ public class WavyIslandMapGenerator : MonoBehaviour
     private void RemoveCircleFromMapTexture(Texture2D mapTexture, Vector3 localSpace, int explosionRadius)
     {
         Profiler.BeginSample("RemoveCircleFromMapTexture");
+
+        // TODO would a bunch of individual SetPixel() calls (and one Apply()) call be faster here?
+
         var pixels = mapTexture.GetPixels32();
         for (int ex = -explosionRadius; ex < +explosionRadius; ex++)
         for (int ey = -explosionRadius; ey < +explosionRadius; ey++)
