@@ -1,3 +1,5 @@
+pull wavyislandmapgenerator apart
+
 add aiming reticle (read UI tutorials?)
 
 fire (raycast) shots after aiming
@@ -11,7 +13,8 @@ apply explosive force on explosions
 improve map performance
  - explosion (more important) (done to some extent)
  - initial map generation (less important)
-
+ - use bitarray instead of bytes for map gen?
+ 
 investigate holes in collision mesh - caused by chunk boundaries?
 
 kill player if they fall below a certain level
