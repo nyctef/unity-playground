@@ -5,7 +5,7 @@ public class MapData
     public MapChunk[] MapChunks;
     public int Width;
     public int Height;
-    public readonly int ChunkSize = 200;
+    public readonly int ChunkSize = 64;
     public int ChunksWide;
     public int ChunksHigh;
 
