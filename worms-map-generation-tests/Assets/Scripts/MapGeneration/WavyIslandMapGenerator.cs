@@ -75,8 +75,8 @@ public class WavyIslandMapGenerator : MonoBehaviour
             var chunkX = x / ChunkSize;
             var chunkY = y / ChunkSize;
             var pixelX = x % ChunkSize;
-            var piyelY = y % ChunkSize;
-            return MapChunks[chunkY * ChunksWide + chunkX].Chunk[piyelY * ChunkSize + pixelX];
+            var pixelY = y % ChunkSize;
+            return MapChunks[chunkY * ChunksWide + chunkX].Chunk[pixelY * ChunkSize + pixelX];
         }
 
         public void Set(int x, int y, byte value)
@@ -84,10 +84,10 @@ public class WavyIslandMapGenerator : MonoBehaviour
             var chunkX = x / ChunkSize;
             var chunkY = y / ChunkSize;
             var pixelX = x % ChunkSize;
-            var piyelY = y % ChunkSize;
+            var pixelY = y % ChunkSize;
             var chunkIndex = chunkY * ChunksWide + chunkX;
             ChangedChunkIndexes.Add(chunkIndex);
-            MapChunks[chunkIndex].Chunk[piyelY * ChunkSize + pixelX] = value;
+            MapChunks[chunkIndex].Chunk[pixelY * ChunkSize + pixelX] = value;
         }
     }
 
