@@ -35,11 +35,55 @@ public class WavyIslandMapGenerator : MonoBehaviour {
     public bool ShowNoiseGeneration = true;
     //public bool ShowMeshGeneration = true;
 
-    private byte[,] _map;
+    [SerializeField] private byte[,] _map;
 
     void Start()
     {
         StartCoroutine(GenerateMap());
+    }
+
+    void OnEnable()
+    {
+        EventManager.Instance.StartListening<Events.Explosion>(OnExplosion);
+    }
+
+    void OnDisable()
+    {
+        EventManager.Instance.StopListening<Events.Explosion>(OnExplosion);
+    }
+
+    private void OnExplosion(Events.Explosion explosion)
+    {
+        RemoveCircle(_map, transform.InverseTransformPoint(explosion.worldSpacePosition), explosion.radius);
+    }
+
+    private void RemoveCircle(byte[,] map, Vector3 localSpace, int explosionRadius)
+    {
+        // todo fix so this is x and y instead of x and z
+        int pixelsCleared = 0;
+        for (int ex = -explosionRadius; ex < +explosionRadius; ex++)
+        for (int ez = -explosionRadius; ez < +explosionRadius; ez++)
+        {
+            var x = (int)localSpace.x + ex;
+            var z = (int)localSpace.z + ez;
+            if (x < 0 || x >= Width || z < 0 || z >= Height)
+            {
+                continue;
+            }
+            if (ex*ex + ez*ez > explosionRadius * explosionRadius)
+            {
+                continue;
+            }
+
+            map[x, z] = 0;
+            pixelsCleared++;
+        }
+
+        ClearChildren();
+        AddCollisionMesh();
+        AddDisplayMesh();
+
+        Debug.Log("RemoveCircle " + localSpace + " " + explosionRadius + " pixelsCleared: "+pixelsCleared);
     }
 
     void Update()

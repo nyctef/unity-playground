@@ -27,6 +27,12 @@ public class CharacterMovement : MonoBehaviour
     {
         var horizontalInput = Input.GetAxisRaw("Horizontal");
         var jumpInput = Input.GetButtonDown("Jump");
+        var explodeInput = Input.GetKeyDown(KeyCode.F1); // temp input
+
+        if (explodeInput)
+        {
+            EventManager.Instance.TriggerEvent(new Events.Explosion(transform.position, 20));
+        }
 
         var move = new Vector3(horizontalInput, 0, 0) * Time.deltaTime * Speed;
         var facingLeft = move.x < 0;
@@ -81,7 +87,7 @@ public class CharacterMovement : MonoBehaviour
         // no 3D allowed
         var zCorrection = new Vector3(0,0, -transform.position.z);
 
-        Debug.Log("CharacterMovement " + transform.position.y.ToString("R") + " " + (_controller.isGrounded ? "G": "F") +" move " + move.ToString("R") + " fallingVelocity " + _fallingVelocity.ToString("R") + " coyoteTime " + _coyoteTime + " shouldFall " + shouldFall + " zCorrection " +zCorrection);
+        //Debug.Log("CharacterMovement " + transform.position.y.ToString("R") + " " + (_controller.isGrounded ? "G": "F") +" move " + move.ToString("R") + " fallingVelocity " + _fallingVelocity.ToString("R") + " coyoteTime " + _coyoteTime + " shouldFall " + shouldFall + " zCorrection " +zCorrection);
 
         transform.localScale = FlipX(transform.localScale, facingLeft);
 
