@@ -189,7 +189,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
         for (var i = 0; i < _map.MapChunks.Length; i++)
         {
             var chunk = _map.MapChunks[i];
-            var collisionMesh = new Mesh {indexFormat = IndexFormat.UInt32};
+            var collisionMesh = new Mesh();
             WriteMapToCollisionMesh(chunk, collisionMesh);
 
             var mapCollisionName = "MapCollision_"+i;
