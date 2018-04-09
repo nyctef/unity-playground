@@ -13,7 +13,6 @@ apply explosive force on explosions
 improve map performance
  - explosion (more important) (done to some extent)
  - initial map generation (less important)
- - use bitarray instead of bytes for map gen?
  
 investigate holes in collision mesh - caused by chunk boundaries?
 
