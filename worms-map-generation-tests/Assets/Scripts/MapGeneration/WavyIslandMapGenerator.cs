@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using UnityEngine;
@@ -8,6 +9,7 @@ using UnityEngine.Networking.NetworkSystem;
 using System.Xml.Linq;
 using UnityEngine.Profiling;
 using UnityEngine.Rendering;
+using Debug = UnityEngine.Debug;
 
 public class WavyIslandMapGenerator : MonoBehaviour
 {
@@ -35,6 +37,9 @@ public class WavyIslandMapGenerator : MonoBehaviour
     public int SmoothPasses = 3;
 
     [SerializeField] private MapData _map;
+    private MeshFilter[] _collisionMeshFilters;
+    private MeshCollider[] _collisionMeshColliders;
+    private Texture2D _mapTexture;
 
     void Start()
     {
@@ -86,10 +91,8 @@ public class WavyIslandMapGenerator : MonoBehaviour
         //RemoveDisplayMesh();
         //AddDisplayMesh();
 
-        // TODO this is probably a little fragile
-        var mapTexture = (Texture2D)transform.Find(MapDisplayName).gameObject.GetComponent<Renderer>().material.mainTexture;
+        RemoveCircleFromMapTexture(_mapTexture, localSpace, explosionRadius);
 
-        RemoveCircleFromMapTexture(mapTexture, localSpace, explosionRadius);
 
         Debug.Log("RemoveCircle " + localSpace + " " + explosionRadius + " pixelsCleared: "+pixelsCleared + " chunkIdsToUpdate " + String.Join(",", chunkIdsToUpdate.Select(x => x.ToString()).ToArray()));
     }
@@ -153,6 +156,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
         var displayMeshFilter = mapDisplay.RequireComponent<MeshFilter>();
         displayMeshFilter.mesh = displayMesh;
         var texture = GetMapTexture();
+        _mapTexture = texture;
         var mapRenderer = mapDisplay.RequireComponent<Renderer>();
         mapRenderer.material = MapMaterial;
         mapRenderer.material.mainTexture = texture;
@@ -165,7 +169,9 @@ public class WavyIslandMapGenerator : MonoBehaviour
         // TODO: we should be able to use CallerMemberName for something nicer with a later C# version
         Profiler.BeginSample("WavyIslandMapGenerator.AddCollisionMesh");
 
-        Debug.Log("Writing map to mesh");
+        //Debug.Log("Writing map to mesh");
+        _collisionMeshFilters = new MeshFilter[_map.MapChunks.Length];
+        _collisionMeshColliders = new MeshCollider[_map.MapChunks.Length];
         for (var i = 0; i < _map.MapChunks.Length; i++)
         {
             var chunk = _map.MapChunks[i];
@@ -178,8 +184,10 @@ public class WavyIslandMapGenerator : MonoBehaviour
             mapCollision.transform.SetParent(transform, false);
             var meshFilter = mapCollision.RequireComponent<MeshFilter>();
             meshFilter.mesh = collisionMesh;
+            _collisionMeshFilters[i] = meshFilter;
             var meshCollider = mapCollision.RequireComponent<MeshCollider>();
             meshCollider.sharedMesh = collisionMesh;
+            _collisionMeshColliders[i] = meshCollider;
         }
 
         Profiler.EndSample();
@@ -188,26 +196,17 @@ public class WavyIslandMapGenerator : MonoBehaviour
     private void UpdateCollisionMeshes(int[] chunkIdsToUpdate)
     {
         // TODO: we should be able to use CallerMemberName for something nicer with a later C# version
-        Profiler.BeginSample("WavyIslandMapGenerator.AddCollisionMesh");
+        Profiler.BeginSample("WavyIslandMapGenerator.UpdateCollisionMeshes");
 
-        Debug.Log("Writing map to mesh");
+        //Debug.Log("Writing map to mesh");
         foreach (var chunkIndex in chunkIdsToUpdate)
         {
             var chunk = _map.MapChunks[chunkIndex];
             var collisionMesh = new Mesh { indexFormat = IndexFormat.UInt32 };
             WriteMapToCollisionMesh(chunk, collisionMesh);
 
-            var mapCollisionName = "MapCollision_" + chunkIndex;
-            var oldMapCollision = transform.Find(mapCollisionName);
-            Destroy(oldMapCollision.gameObject);
-
-            var mapCollision =
-                new GameObject(mapCollisionName, typeof(MeshFilter), typeof(MeshCollider) /*, typeof(MeshRenderer)*/);
-            mapCollision.transform.SetParent(transform, false);
-            var meshFilter = mapCollision.RequireComponent<MeshFilter>();
-            meshFilter.mesh = collisionMesh;
-            var meshCollider = mapCollision.RequireComponent<MeshCollider>();
-            meshCollider.sharedMesh = collisionMesh;
+            _collisionMeshFilters[chunkIndex].mesh = collisionMesh;
+            _collisionMeshColliders[chunkIndex].sharedMesh = collisionMesh;
         }
 
         Profiler.EndSample();
@@ -227,7 +226,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
 
     private void WriteMapToCollisionMesh(MapChunk chunk, Mesh mesh)
     {
-        Debug.Log("WriteMapToCollisionMesh " + Width + " " + Height);
+        //Debug.Log("WriteMapToCollisionMesh " + Width + " " + Height);
         Profiler.BeginSample("WriteMapToCollisionMesh");
 
         var sx = chunk.Width;
