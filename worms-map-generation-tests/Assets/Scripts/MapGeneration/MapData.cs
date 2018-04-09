@@ -8,6 +8,7 @@ public class MapData
     public int ChunksWide;
     public int ChunksHigh;
 
+    // TODO HashSet is overkill here - this could probably be an int array or a bitmap or something
     public HashSet<int> ChangedChunkIndexes = new HashSet<int>();
 
     public void Init(int width, int height)
