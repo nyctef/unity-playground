@@ -268,117 +268,123 @@ public class WavyIslandMapGenerator : MonoBehaviour
                 // +8  +4
                 //
                 // +1  +2
+                var left1 = left + mapX;
+                var left0 = left1 - 0.5f;
+                var left2 = left1 + 0.5f;
+                var bottom1 = bottom + mapY;
+                var bottom0 = bottom1 - 0.5f;
+                var bottom2 = bottom1 + 0.5f;
                 switch (cell)
                 {
                     case 0: // 0b0000:
                         break;
                     case 1: // 0b0001:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1));
+                            new Vector3(left1, bottom0, -1),
+                            new Vector3(left0, bottom1, -1),
+                            new Vector3(left0, bottom1, +1),
+                            new Vector3(left1, bottom0, +1));
                         break;
                     case 2: // 0b0010:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1));
+                            new Vector3(left1, bottom0, -1),
+                            new Vector3(left1, bottom0, +1),
+                            new Vector3(left2, bottom1, +1),
+                            new Vector3(left2, bottom1, -1));
                         break;
                     case 3: // 0b0011:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1));
+                            new Vector3(left2, bottom1, -1),
+                            new Vector3(left0, bottom1, -1),
+                            new Vector3(left0, bottom1, +1),
+                            new Vector3(left2, bottom1, +1));
                         break;
                     case 4: // 0b0100:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1));
+                            new Vector3(left2, bottom1, -1),
+                            new Vector3(left2, bottom1, +1),
+                            new Vector3(left1, bottom2, +1),
+                            new Vector3(left1, bottom2, -1));
                         break;
                     case 5: // 0b0101:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1));
+                            new Vector3(left2, bottom1, -1),
+                            new Vector3(left2, bottom1, +1),
+                            new Vector3(left1, bottom0, +1),
+                            new Vector3(left1, bottom0, -1));
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1));
+                            new Vector3(left0, bottom1, -1),
+                            new Vector3(left0, bottom1, +1),
+                            new Vector3(left1, bottom2, +1),
+                            new Vector3(left1, bottom2, -1));
                         break;
                     case 6: // 0b0110:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1));
+                            new Vector3(left1, bottom2, -1),
+                            new Vector3(left1, bottom0, -1),
+                            new Vector3(left1, bottom0, +1),
+                            new Vector3(left1, bottom2, +1));
                         break;
                     case 7: // 0b0111:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1));
+                            new Vector3(left0, bottom1, -1),
+                            new Vector3(left0, bottom1, +1),
+                            new Vector3(left1, bottom2, +1),
+                            new Vector3(left1, bottom2, -1));
                         break;
                     case 8: // 0b1000:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1));
+                            new Vector3(left0, bottom1, -1),
+                            new Vector3(left1, bottom2, -1),
+                            new Vector3(left1, bottom2, +1),
+                            new Vector3(left0, bottom1, +1));
                         break;
                     case 9: // 0b1001:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1));
+                            new Vector3(left1, bottom2, -1),
+                            new Vector3(left1, bottom2, +1),
+                            new Vector3(left1, bottom0, +1),
+                            new Vector3(left1, bottom0, -1));
                         break;
                     case 10: // 0b1010:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1));
+                            new Vector3(left1, bottom0, -1),
+                            new Vector3(left1, bottom0, +1),
+                            new Vector3(left0, bottom1, +1),
+                            new Vector3(left0, bottom1, -1));
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1));
+                            new Vector3(left2, bottom1, -1),
+                            new Vector3(left2, bottom1, +1),
+                            new Vector3(left1, bottom2, +1),
+                            new Vector3(left1, bottom2, -1));
                         break;
                     case 11: // 0b1011:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, -1),
-                            new Vector3(left + mapX, bottom + mapY + 0.5f, +1),
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1));
+                            new Vector3(left2, bottom1, -1),
+                            new Vector3(left1, bottom2, -1),
+                            new Vector3(left1, bottom2, +1),
+                            new Vector3(left2, bottom1, +1));
                         break;
                     case 12: // 0b1100:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1));
+                            new Vector3(left2, bottom1, -1),
+                            new Vector3(left2, bottom1, +1),
+                            new Vector3(left0, bottom1, +1),
+                            new Vector3(left0, bottom1, -1));
                         break;
                     case 13: // 0b1101:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, -1),
-                            new Vector3(left + mapX + 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1));
+                            new Vector3(left2, bottom1, -1),
+                            new Vector3(left2, bottom1, +1),
+                            new Vector3(left1, bottom0, +1),
+                            new Vector3(left1, bottom0, -1));
                         break;
                     case 14: // 0b1110:
                         BuildQuad(vertices, triangles,
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, -1),
-                            new Vector3(left + mapX, bottom + mapY - 0.5f, +1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, +1),
-                            new Vector3(left + mapX - 0.5f, bottom + mapY, -1));
+                            new Vector3(left1, bottom0, -1),
+                            new Vector3(left1, bottom0, +1),
+                            new Vector3(left0, bottom1, +1),
+                            new Vector3(left0, bottom1, -1));
                         break;
                     case 15: // 0b1111:
                         break;
