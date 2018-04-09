@@ -257,21 +257,19 @@ public class WavyIslandMapGenerator : MonoBehaviour
         // ref: https://en.wikipedia.org/wiki/Marching_squares
         for (int mapY = 0; mapY < sy - 1; mapY++)
         {
+            var yc = chunk.Chunk[mapY];
+            var y1c = chunk.Chunk[mapY + 1];
+
+            if ((yc == 0 && y1c == 0) || (yc == UInt64.MaxValue && y1c == UInt64.MaxValue))
+            {
+                continue;
+            }
+
             for (int mapX = 0; mapX < sx - 1; mapX++)
             {
                 var cell = 0;
 
                 _isSolidAtChecksCustomSampler.Begin();
-                // TODO: can/should we do better than BitArray if we pull out whole ints at a time?
-                // eg check if the relevant ints are all 0 or all 1 and skip?
-                var yc = chunk.Chunk[mapY];
-                var y1c = chunk.Chunk[mapY + 1];
-
-                if ((yc == 0 && y1c == 0) || (yc == UInt64.MaxValue && y1c == UInt64.MaxValue))
-                {
-                    _isSolidAtChecksCustomSampler.End();
-                    continue;
-                }
 
                 if ((yc & 1UL << mapX) > 0) { cell += 1; }
                 if ((yc & 1UL << mapX + 1) > 0) { cell += 2; }
