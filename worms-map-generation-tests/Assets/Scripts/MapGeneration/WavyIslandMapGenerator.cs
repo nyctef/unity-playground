@@ -41,8 +41,15 @@ public class WavyIslandMapGenerator : MonoBehaviour
     private MeshCollider[] _collisionMeshColliders;
     private Texture2D _mapTexture;
 
+    private CustomSampler _isSolidAtChecksCustomSampler;
+    private CustomSampler _emptyCustomSampler;
+    private CustomSampler _marchingCubesSwitchCustomSampler;
+
     void Start()
     {
+        _isSolidAtChecksCustomSampler = CustomSampler.Create("IsSolidAt checks");
+        _emptyCustomSampler = CustomSampler.Create("empty");
+        _marchingCubesSwitchCustomSampler = CustomSampler.Create("MarchingCubesSwitch");
         StartCoroutine(GenerateMap());
     }
 
@@ -247,14 +254,17 @@ public class WavyIslandMapGenerator : MonoBehaviour
             {
                 var cell = 0;
 
-                Profiler.BeginSample("IsSolidAt checks");
+                _isSolidAtChecksCustomSampler.Begin();
                 if (chunk.Get(mapX, mapY)) { cell += 1; }
                 if (chunk.Get(mapX + 1, mapY)) { cell += 2; }
                 if (chunk.Get(mapX + 1, mapY + 1)) { cell += 4; }
                 if (chunk.Get(mapX, mapY+1)) { cell += 8; }
-                Profiler.EndSample();
+                _isSolidAtChecksCustomSampler.End();
 
-                Profiler.BeginSample("Marching cubes switch");
+                _emptyCustomSampler.Begin();
+                _emptyCustomSampler.End();
+
+                _marchingCubesSwitchCustomSampler.Begin();
                 // +8  +4
                 //
                 // +1  +2
@@ -373,7 +383,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
                     case 15: // 0b1111:
                         break;
                 }
-                Profiler.EndSample();
+                _marchingCubesSwitchCustomSampler.End();
             }
         }
         Profiler.EndSample();
