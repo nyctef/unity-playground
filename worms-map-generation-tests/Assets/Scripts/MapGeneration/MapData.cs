@@ -34,7 +34,7 @@ public class MapData
         var chunkY = y / ChunkSize;
         var pixelX = x % ChunkSize;
         var pixelY = y % ChunkSize;
-        return MapChunks[chunkY * ChunksWide + chunkX].Chunk[pixelY * ChunkSize + pixelX];
+        return (MapChunks[chunkY * ChunksWide + chunkX].Chunk[pixelY] & 1UL << pixelX) > 0;
     }
 
     public void Set(int x, int y, bool value)
@@ -45,6 +45,13 @@ public class MapData
         var pixelY = y % ChunkSize;
         var chunkIndex = chunkY * ChunksWide + chunkX;
         ChangedChunkIndexes.Add(chunkIndex);
-        MapChunks[chunkIndex].Chunk[pixelY * ChunkSize + pixelX] = value;
+        if (value)
+        {
+            MapChunks[chunkIndex].Chunk[pixelY] |= 1UL << pixelX;
+        }
+        else
+        {
+            MapChunks[chunkIndex].Chunk[pixelY] &= ~(1UL << pixelX);
+        }
     }
 }
