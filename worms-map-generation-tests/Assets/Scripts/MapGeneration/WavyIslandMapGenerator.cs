@@ -263,12 +263,14 @@ public class WavyIslandMapGenerator : MonoBehaviour
 
                 _isSolidAtChecksCustomSampler.Begin();
                 // TODO: can/should we do better than BitArray if we pull out whole ints at a time?
+                // eg check if the relevant ints are all 0 or all 1 and skip?
                 if (chunk.Get(mapX, mapY)) { cell += 1; }
                 if (chunk.Get(mapX + 1, mapY)) { cell += 2; }
                 if (chunk.Get(mapX + 1, mapY + 1)) { cell += 4; }
                 if (chunk.Get(mapX, mapY+1)) { cell += 8; }
                 _isSolidAtChecksCustomSampler.End();
 
+                if (cell == 0 || cell == 15) { continue; }
 
                 _marchingCubesSwitchCustomSampler.Begin();
                 // +8  +4
