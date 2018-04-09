@@ -72,6 +72,12 @@ public class WavyIslandMapGenerator : MonoBehaviour
 
     private void RemoveCircle(MapData map, Vector3 localSpace, int explosionRadius)
     {
+        var removeCircleTimer = Stopwatch.StartNew();
+
+        Profiler.BeginSample("RemoveCircle");
+
+        Profiler.BeginSample("UpdateMapData");
+
         int pixelsCleared = 0;
         map.ChangedChunkIndexes.Clear();
         for (int ex = -explosionRadius; ex < +explosionRadius; ex++)
@@ -92,16 +98,19 @@ public class WavyIslandMapGenerator : MonoBehaviour
             pixelsCleared++;
         }
 
+        Profiler.EndSample();
+
         var chunkIdsToUpdate = map.ChangedChunkIndexes.ToArray();
 
         UpdateCollisionMeshes(chunkIdsToUpdate);
-        //RemoveDisplayMesh();
-        //AddDisplayMesh();
 
         RemoveCircleFromMapTexture(_mapTexture, localSpace, explosionRadius);
 
+        Debug.LogFormat("RemoveCircle {0} {1} pixelsCleared: {2} chunkIdsToUpdate {3} elapsed-ms {4}",
+            localSpace, explosionRadius, pixelsCleared,
+            String.Join(",", chunkIdsToUpdate.Select(x => x.ToString()).ToArray()), removeCircleTimer.Elapsed.TotalMilliseconds);
 
-        Debug.Log("RemoveCircle " + localSpace + " " + explosionRadius + " pixelsCleared: "+pixelsCleared + " chunkIdsToUpdate " + String.Join(",", chunkIdsToUpdate.Select(x => x.ToString()).ToArray()));
+        Profiler.EndSample();
     }
 
     void Update()
@@ -255,6 +264,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
                 var cell = 0;
 
                 _isSolidAtChecksCustomSampler.Begin();
+                // TODO: can/should we do better than BitArray if we pull out whole ints at a time?
                 if (chunk.Get(mapX, mapY)) { cell += 1; }
                 if (chunk.Get(mapX + 1, mapY)) { cell += 2; }
                 if (chunk.Get(mapX + 1, mapY + 1)) { cell += 4; }
