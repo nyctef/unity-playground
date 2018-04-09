@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Collections;
 
+/// <summary>
+/// A 64x64 chunk of map data
+/// </summary>
 public class MapChunk
 {
 // TODO: should these be structs or classes? Does it matter?
     public UInt64[] Chunk;
 
-    // assuming w = h = 64
-
-    public int Width;
-    public int Height;
     public int XOffset;
     public int YOffset;
 
-    public void Init(int width, int height, int x, int y)
+    public void Init(int x, int y)
     {
-        Width = width;
-        Height = height;
         XOffset = x;
         YOffset = y;
         Chunk = new UInt64[64];
     }
+
+    public const int ChunkSize = 64;
 }

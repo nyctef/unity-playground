@@ -243,10 +243,6 @@ public class WavyIslandMapGenerator : MonoBehaviour
         //Debug.Log("WriteMapToCollisionMesh " + Width + " " + Height);
         Profiler.BeginSample("WriteMapToCollisionMesh");
 
-        var sx = chunk.Width;
-        //auto sy = (int32)Size.Y;
-        var sy = chunk.Height;
-
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
@@ -255,7 +251,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
 
         Profiler.BeginSample("Main loop");
         // ref: https://en.wikipedia.org/wiki/Marching_squares
-        for (int mapY = 0; mapY < sy - 1; mapY++)
+        for (int mapY = 0; mapY < MapChunk.ChunkSize - 1; mapY++)
         {
             var yc = chunk.Chunk[mapY];
             var y1c = chunk.Chunk[mapY + 1];
@@ -265,7 +261,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
                 continue;
             }
 
-            for (int mapX = 0; mapX < sx - 1; mapX++)
+            for (int mapX = 0; mapX < MapChunk.ChunkSize - 1; mapX++)
             {
                 var cell = 0;
 

@@ -5,7 +5,6 @@ public class MapData
     public MapChunk[] MapChunks;
     public int Width;
     public int Height;
-    public readonly int ChunkSize = 64;
     public int ChunksWide;
     public int ChunksHigh;
 
@@ -15,8 +14,8 @@ public class MapData
     {
         Width = width;
         Height = height;
-        ChunksWide = width / ChunkSize + (width % ChunkSize > 0 ? 1 : 0);
-        ChunksHigh = height / ChunkSize + (height % ChunkSize > 0 ? 1 : 0);
+        ChunksWide = width / MapChunk.ChunkSize + (width % MapChunk.ChunkSize > 0 ? 1 : 0);
+        ChunksHigh = height / MapChunk.ChunkSize + (height % MapChunk.ChunkSize > 0 ? 1 : 0);
 
         MapChunks = new MapChunk[ChunksWide * ChunksHigh];
         for (int x = 0; x < ChunksWide; x++)
@@ -24,25 +23,25 @@ public class MapData
         {
             int i = y * ChunksWide + x;
             MapChunks[i] = new MapChunk();
-            MapChunks[i].Init(ChunkSize, ChunkSize, x * ChunkSize, y * ChunkSize);
+            MapChunks[i].Init(x * MapChunk.ChunkSize, y * MapChunk.ChunkSize);
         }
     }
 
     public bool Get(int x, int y)
     {
-        var chunkX = x / ChunkSize;
-        var chunkY = y / ChunkSize;
-        var pixelX = x % ChunkSize;
-        var pixelY = y % ChunkSize;
+        var chunkX = x / MapChunk.ChunkSize;
+        var chunkY = y / MapChunk.ChunkSize;
+        var pixelX = x % MapChunk.ChunkSize;
+        var pixelY = y % MapChunk.ChunkSize;
         return (MapChunks[chunkY * ChunksWide + chunkX].Chunk[pixelY] & 1UL << pixelX) > 0;
     }
 
     public void Set(int x, int y, bool value)
     {
-        var chunkX = x / ChunkSize;
-        var chunkY = y / ChunkSize;
-        var pixelX = x % ChunkSize;
-        var pixelY = y % ChunkSize;
+        var chunkX = x / MapChunk.ChunkSize;
+        var chunkY = y / MapChunk.ChunkSize;
+        var pixelX = x % MapChunk.ChunkSize;
+        var pixelY = y % MapChunk.ChunkSize;
         var chunkIndex = chunkY * ChunksWide + chunkX;
         ChangedChunkIndexes.Add(chunkIndex);
         if (value)
