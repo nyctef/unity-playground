@@ -42,13 +42,11 @@ public class WavyIslandMapGenerator : MonoBehaviour
     private Texture2D _mapTexture;
 
     private CustomSampler _isSolidAtChecksCustomSampler;
-    private CustomSampler _emptyCustomSampler;
     private CustomSampler _marchingCubesSwitchCustomSampler;
 
     void Start()
     {
         _isSolidAtChecksCustomSampler = CustomSampler.Create("IsSolidAt checks");
-        _emptyCustomSampler = CustomSampler.Create("empty");
         _marchingCubesSwitchCustomSampler = CustomSampler.Create("MarchingCubesSwitch");
         StartCoroutine(GenerateMap());
     }
@@ -271,8 +269,6 @@ public class WavyIslandMapGenerator : MonoBehaviour
                 if (chunk.Get(mapX, mapY+1)) { cell += 8; }
                 _isSolidAtChecksCustomSampler.End();
 
-                _emptyCustomSampler.Begin();
-                _emptyCustomSampler.End();
 
                 _marchingCubesSwitchCustomSampler.Begin();
                 // +8  +4
