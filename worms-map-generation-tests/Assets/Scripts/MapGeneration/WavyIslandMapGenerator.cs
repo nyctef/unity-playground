@@ -466,9 +466,6 @@ public class WavyIslandMapGenerator : MonoBehaviour
     {
         Profiler.BeginSample("RemoveCircleFromMapTexture");
 
-        // TODO would a bunch of individual SetPixel() calls (and one Apply()) call be faster here?
-
-        var pixels = mapTexture.GetPixels32();
         for (int ex = -explosionRadius; ex < +explosionRadius; ex++)
         for (int ey = -explosionRadius; ey < +explosionRadius; ey++)
         {
@@ -483,9 +480,8 @@ public class WavyIslandMapGenerator : MonoBehaviour
                 continue;
             }
 
-            pixels[y * Width + x] = new Color32(0, 0, 0, 0);
+            mapTexture.SetPixel(x, y, new Color(0,0,0,0));
         }
-        mapTexture.SetPixels32(pixels);
         mapTexture.Apply();
         Profiler.EndSample();
     }
