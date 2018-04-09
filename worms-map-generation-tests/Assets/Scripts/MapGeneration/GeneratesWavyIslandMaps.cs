@@ -118,11 +118,6 @@ public static class GeneratesWavyIslandMaps
             Debug.LogWarning("FloodFill off the edge of the map");
             return;
         }
-        //if (sourceValue == targetValue)
-        //{
-        //    Debug.LogWarning("FloodFill source==targetvalue");
-        //    return;
-        //}
         if (sourceMap.Width != targetMap.Width || sourceMap.Height != targetMap.Height)
         {
             Debug.LogWarning("maps different sizes");
