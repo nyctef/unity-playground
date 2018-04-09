@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// TODO: fill this out
+
 public class MapManager : MonoBehaviour
 {
     public Transform MapContainer;
