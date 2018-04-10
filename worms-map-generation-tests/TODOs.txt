@@ -40,3 +40,5 @@ figure out how to serialize maps - can we make startup faster if a map is alread
 
 Is pushing aiming through the event system worth it?
  - In general, should we push all gameplay-critical logic through an event system in order to get replication/replays?
+ 
+something like wallSpeedRetentionTimer for sideways jumps? Don't want to get stuck on terrain if we're just skimming over the top of it
