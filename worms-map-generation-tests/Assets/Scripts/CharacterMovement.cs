@@ -6,10 +6,6 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class CharacterMovement : MonoBehaviour
 {
-    private CharacterController _controller;
-    private SimpleSpriteAnimator _animator;
-    private Transform _sprite;
-
     public float Speed = 1f;
     public Vector3 Gravity = new Vector3(0, -.981f);
     public float MaxCoyoteTime = 0.1f;
@@ -17,9 +13,16 @@ public class CharacterMovement : MonoBehaviour
     public Vector3 VertJumpForce = new Vector3(0, 2f);
     public Vector3 HorizontalJumpForce = new Vector3(1.5f, 0.5f);
 
+    public Transform GrenadePrefab;
+    public float GrenadeThrowSpeed;
+
     // TODO: can/should we separate up/down aiming from left/right movement?
     public float AimAngle = -90f;
     public float AimSpeed = 2f;
+
+    private CharacterController _controller;
+    private SimpleSpriteAnimator _animator;
+    private Transform _sprite;
 
     private Vector3 _fallingVelocity;
     private float _coyoteTime = 0;
@@ -40,10 +43,12 @@ public class CharacterMovement : MonoBehaviour
         var horizontalInput = Input.GetAxisRaw("Horizontal");
         var verticalInput = Input.GetAxisRaw("Vertical");
         var jumpInput = Input.GetButtonDown("Jump");
-        var explodeInput = Input.GetKeyDown(KeyCode.F1); // temp input
+        var fire1Input = Input.GetKeyDown(KeyCode.F1); // temp input
+        var fire2Input = Input.GetKeyDown(KeyCode.F2); // temp input
 
+        // TODO pull out weapons manager
 
-        if (explodeInput)
+        if (fire1Input)
         {
             var ray = new Ray(transform.position, Quaternion.Euler(0, 0, AimAngle) * Vector3.up);
             Debug.DrawRay(ray.origin, ray.direction * 200, Color.red, 0.5f, false);
@@ -52,6 +57,14 @@ public class CharacterMovement : MonoBehaviour
             {
                 EventManager.Instance.TriggerEvent(new Events.Explosion(hit.point, 50));
             }
+        }
+
+        if (fire2Input)
+        {
+            var grenade = Instantiate(GrenadePrefab, transform.position, Quaternion.identity);
+            Physics.IgnoreCollision(GetComponent<Collider>(), grenade.GetComponent<Collider>());
+            var direction = Quaternion.Euler(0, 0, AimAngle) * Vector3.up *GrenadeThrowSpeed;
+            grenade.GetComponent<Rigidbody>().velocity = direction;
         }
 
         var move = new Vector3(horizontalInput, 0, 0) * Time.deltaTime * Speed;

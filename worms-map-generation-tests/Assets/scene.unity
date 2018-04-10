@@ -140,7 +140,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 347c8adb4a45f5749b19f18353039ae9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Explosion50: {fileID: 1799103968602744, guid: 9c28402fc040b0a42b6c6d50b625d1d0,
+  Explosion50Prefab: {fileID: 1799103968602744, guid: 9c28402fc040b0a42b6c6d50b625d1d0,
     type: 2}
 --- !u!4 &164417302
 Transform:
@@ -630,6 +630,9 @@ MonoBehaviour:
   MaxCoyoteTime: 0.1
   VertJumpForce: {x: 0, y: 2, z: 0}
   HorizontalJumpForce: {x: 1.5, y: 0.5, z: 0}
+  GrenadePrefab: {fileID: 4349334486296318, guid: b557cd12eb9955c4b97c298578a81675,
+    type: 2}
+  GrenadeThrowSpeed: 200
   AimAngle: -90
   AimSpeed: 2
 --- !u!114 &1567319402

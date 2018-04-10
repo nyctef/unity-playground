@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ExplosionManager : MonoBehaviour
 {
-    public GameObject Explosion50;
+    public GameObject Explosion50Prefab;
 
     void OnEnable()
     {
@@ -19,6 +19,7 @@ public class ExplosionManager : MonoBehaviour
     private void OnExplosion(Events.Explosion explosion)
     {
         // TODO add some particles and other effects
-        Instantiate(Explosion50, explosion.worldSpacePosition, Quaternion.identity);
+        // TODO cope with different explosion sizes
+        Instantiate(Explosion50Prefab, explosion.worldSpacePosition, Quaternion.identity);
     }
 }
