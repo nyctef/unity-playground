@@ -1,5 +1,3 @@
-pull wavyislandmapgenerator apart
-
 add aiming reticle (read UI tutorials?)
 
 fire (raycast) shots after aiming
@@ -17,6 +15,8 @@ improve map performance
 investigate holes in collision mesh - caused by chunk boundaries?
 
 kill player if they fall below a certain level
+
+pull wavyislandmapgenerator apart
 
 more cell automata stuff
  - add edges to top of level
