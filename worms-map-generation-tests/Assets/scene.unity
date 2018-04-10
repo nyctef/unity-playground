@@ -738,7 +738,7 @@ GameObject:
   - component: {fileID: 1953421469}
   - component: {fileID: 1953421470}
   m_Layer: 0
-  m_Name: my_first_walk_holding_0
+  m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

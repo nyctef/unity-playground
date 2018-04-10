@@ -8,6 +8,7 @@ public class CharacterMovement : MonoBehaviour
 {
     private CharacterController _controller;
     private SimpleSpriteAnimator _animator;
+    private Transform _sprite;
 
     public float Speed = 1f;
     public Vector3 Gravity = new Vector3(0, -.981f);
@@ -29,6 +30,7 @@ public class CharacterMovement : MonoBehaviour
     {
         _controller = GetComponent<CharacterController>();
         _animator = GetComponent<SimpleSpriteAnimator>();
+        _sprite = transform.Find("Sprite");
     }
 
     void Update()
@@ -108,7 +110,7 @@ public class CharacterMovement : MonoBehaviour
         //    transform.position.y, _controller.isGrounded ? "G" : "F", move.ToString("R"),
         //    _fallingVelocity.ToString("R"), _coyoteTime, shouldFall, zCorrection, newAnimation);
 
-        transform.localScale = FlipX(transform.localScale, facingLeft);
+        _sprite.transform.localScale = FlipX(transform.localScale, facingLeft);
 
         _controller.Move(move + _fallingVelocity + zCorrection);
     }
