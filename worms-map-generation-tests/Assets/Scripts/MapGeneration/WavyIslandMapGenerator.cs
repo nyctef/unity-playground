@@ -186,6 +186,13 @@ public class WavyIslandMapGenerator : MonoBehaviour
         //Debug.Log("Writing map to mesh");
         _collisionMeshFilters = new MeshFilter[_map.MapChunks.Length];
         _collisionMeshColliders = new MeshCollider[_map.MapChunks.Length];
+
+        // TODO: need to generate collision geometry for the gap between chunks
+        // either do that as one extra pass at the end, or maybe offset all the chunks by one square so that the right
+        // geometry gets created? (latter option would have to be implemented back in the map generator which is a bit
+        // icky, but maybe it's actually the right thing to do since it means we can treat each map chunk as a whole map
+        // in its own right)
+
         for (var i = 0; i < _map.MapChunks.Length; i++)
         {
             var chunk = _map.MapChunks[i];
