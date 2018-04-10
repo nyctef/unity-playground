@@ -35,3 +35,8 @@ fix EventManager errors on shutdown
 add particles and more effects
  - dust puffs when jumping and landing
  - more explosion bits
+ 
+figure out how to serialize maps - can we make startup faster if a map is already generated?
+
+Is pushing aiming through the event system worth it?
+ - In general, should we push all gameplay-critical logic through an event system in order to get replication/replays?

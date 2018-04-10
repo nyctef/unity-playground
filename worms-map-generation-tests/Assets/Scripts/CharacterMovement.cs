@@ -16,6 +16,10 @@ public class CharacterMovement : MonoBehaviour
     public Vector3 VertJumpForce = new Vector3(0, 2f);
     public Vector3 HorizontalJumpForce = new Vector3(1.5f, 0.5f);
 
+    // TODO: can/should we separate up/down aiming from left/right movement?
+    public float AimAngle = -90f;
+    public float AimSpeed = 2f;
+
     private Vector3 _fallingVelocity;
     private float _coyoteTime = 0;
 
@@ -30,14 +34,19 @@ public class CharacterMovement : MonoBehaviour
     void Update()
     {
         var horizontalInput = Input.GetAxisRaw("Horizontal");
+        var verticalInput = Input.GetAxisRaw("Vertical");
         var jumpInput = Input.GetButtonDown("Jump");
         var explodeInput = Input.GetKeyDown(KeyCode.F1); // temp input
+
+        // TODO: aim angle / input direction needs to change based on facing
+        AimAngle += verticalInput * AimSpeed;
 
         if (explodeInput)
         {
             EventManager.Instance.TriggerEvent(new Events.Explosion(transform.position, 50));
         }
 
+        // TODO: facingLeft needs to be preserved when we stop moving
         var move = new Vector3(horizontalInput, 0, 0) * Time.deltaTime * Speed;
         var facingLeft = move.x < 0;
 
