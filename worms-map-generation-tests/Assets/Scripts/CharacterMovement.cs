@@ -45,7 +45,13 @@ public class CharacterMovement : MonoBehaviour
 
         if (explodeInput)
         {
-            EventManager.Instance.TriggerEvent(new Events.Explosion(transform.position, 50));
+            var ray = new Ray(transform.position, Quaternion.Euler(0, 0, AimAngle) * Vector3.up);
+            Debug.DrawRay(ray.origin, ray.direction * 200, Color.red, 0.5f, false);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit))
+            {
+                EventManager.Instance.TriggerEvent(new Events.Explosion(hit.point, 50));
+            }
         }
 
         var move = new Vector3(horizontalInput, 0, 0) * Time.deltaTime * Speed;

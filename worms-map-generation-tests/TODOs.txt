@@ -1,8 +1,6 @@
-add aiming reticle (read UI tutorials?)
-
-fire (raycast) shots after aiming
-
 fire (physics) shots with gravity
+
+hide reticle when moving?
 
 apply damage on explosions
 
