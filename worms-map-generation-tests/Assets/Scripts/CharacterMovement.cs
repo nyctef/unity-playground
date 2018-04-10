@@ -62,6 +62,8 @@ public class CharacterMovement : MonoBehaviour
         if (fire2Input)
         {
             var grenade = Instantiate(GrenadePrefab, transform.position, Quaternion.identity);
+            // TODO: should probably undo this IgnoreCollision after a second or so - time for a coroutine?
+            // Should the whole grenade lifetime be one coroutine?
             Physics.IgnoreCollision(GetComponent<Collider>(), grenade.GetComponent<Collider>());
             var direction = Quaternion.Euler(0, 0, AimAngle) * Vector3.up *GrenadeThrowSpeed;
             grenade.GetComponent<Rigidbody>().velocity = direction;
