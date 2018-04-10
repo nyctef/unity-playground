@@ -5,7 +5,6 @@ using UnityEngine;
 public class DisplayAimAngleFromPlayer : MonoBehaviour
 {
     // TODO: should this be a direct reference?
-
     public CharacterMovement CharacterWithAim;
 
     // Update is called once per frame

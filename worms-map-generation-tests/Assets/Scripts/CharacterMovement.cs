@@ -24,6 +24,8 @@ public class CharacterMovement : MonoBehaviour
     private Vector3 _fallingVelocity;
     private float _coyoteTime = 0;
 
+    private bool _facingLeft;
+
     private string _currentAnimation = null;
 
     void Start()
@@ -40,17 +42,27 @@ public class CharacterMovement : MonoBehaviour
         var jumpInput = Input.GetButtonDown("Jump");
         var explodeInput = Input.GetKeyDown(KeyCode.F1); // temp input
 
-        // TODO: aim angle / input direction needs to change based on facing
-        AimAngle += verticalInput * AimSpeed;
 
         if (explodeInput)
         {
             EventManager.Instance.TriggerEvent(new Events.Explosion(transform.position, 50));
         }
 
-        // TODO: facingLeft needs to be preserved when we stop moving
         var move = new Vector3(horizontalInput, 0, 0) * Time.deltaTime * Speed;
-        var facingLeft = move.x < 0;
+        
+        // flip relevant values when facing left
+        if (Math.Abs(move.x) > 0.01)
+        {
+            var facingLeft = move.x < 0;
+            if (facingLeft != _facingLeft)
+            {
+                AimAngle = -AimAngle; // since 0 angle is straight up
+            }
+            _facingLeft = facingLeft;
+        }
+
+        AimAngle += verticalInput * AimSpeed * (_facingLeft ? -1 : 1);
+        AimAngle %= 360;
 
         // calculate "coyote time" - a small grace period to jump off ledges with
         if (_controller.isGrounded)
@@ -89,7 +101,7 @@ public class CharacterMovement : MonoBehaviour
             }
             else
             {
-                _fallingVelocity = FlipX(HorizontalJumpForce, facingLeft);
+                _fallingVelocity = FlipX(HorizontalJumpForce, _facingLeft);
             }
         }
         else if (Math.Abs(_fallingVelocity.y) < 0.1f)
@@ -110,7 +122,7 @@ public class CharacterMovement : MonoBehaviour
         //    transform.position.y, _controller.isGrounded ? "G" : "F", move.ToString("R"),
         //    _fallingVelocity.ToString("R"), _coyoteTime, shouldFall, zCorrection, newAnimation);
 
-        _sprite.transform.localScale = FlipX(transform.localScale, facingLeft);
+        _sprite.transform.localScale = FlipX(transform.localScale, _facingLeft);
 
         _controller.Move(move + _fallingVelocity + zCorrection);
     }
