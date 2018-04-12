@@ -51,3 +51,5 @@ Improve grenade sprite and make it a bit more unique
 Sprites for jumping animations
 
 Could always look into map gen/explosion performance some more
+
+Investigate using EdgeCollider2D instead of MeshCollider (3d)
