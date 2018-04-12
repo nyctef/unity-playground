@@ -43,3 +43,5 @@ Improve grenade sprite and make it a bit more unique
  - also a bit smaller?
 
 Sprites for jumping animations
+
+Investigate using EdgeCollider2D instead of MeshCollider (3d)
