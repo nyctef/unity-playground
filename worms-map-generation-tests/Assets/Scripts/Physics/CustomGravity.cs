@@ -1,14 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 public class CustomGravity : MonoBehaviour
 {
+    public float GravityScale = 1.0f;
 
-    public float gravityScale = 1.0f;
-
-    public static float globalGravity = -9.81f;
+    private static readonly float GlobalGravity = -9.81f;
 
     Rigidbody _rb;
 
@@ -20,7 +17,7 @@ public class CustomGravity : MonoBehaviour
 
     void FixedUpdate()
     {
-        Vector3 gravity = globalGravity * gravityScale * Vector3.up;
+        var gravity = GlobalGravity * GravityScale * Vector3.up;
         _rb.AddForce(gravity, ForceMode.Acceleration);
     }
 }

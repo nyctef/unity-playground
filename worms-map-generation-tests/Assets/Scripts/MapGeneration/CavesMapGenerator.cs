@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Globalization;
-using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using UnityEngine;
-using UnityEngine.Networking.NetworkSystem;
 using Random = System.Random;
 
 public class CavesMapGenerator : MonoBehaviour
@@ -56,7 +52,7 @@ public class CavesMapGenerator : MonoBehaviour
 
         var tmpMap = (int[,])_map.Clone();
 
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
         {
             SmoothMap(ref _map, ref tmpMap);
 
@@ -71,8 +67,8 @@ public class CavesMapGenerator : MonoBehaviour
     {
         var rng = new Random(Seed.GetHashCode());
 
-        for (int x = 0; x < Width; x++)
-        for (int y = 0; y < Height; y++)
+        for (var x = 0; x < Width; x++)
+        for (var y = 0; y < Height; y++)
         {
             if (x == 0 || x == Width - 1 || y == 0 || y == Height - 1)
             {
@@ -87,8 +83,8 @@ public class CavesMapGenerator : MonoBehaviour
 
     void SmoothMap(ref int[,] map, ref int[,] tmpMap)
     {
-        for (int x = 0; x < Width; x++)
-        for (int y = 0; y < Height; y++)
+        for (var x = 0; x < Width; x++)
+        for (var y = 0; y < Height; y++)
         {
             var neighbourWallTiles = GetSurroundingWallCount(map, x, y);
             if (neighbourWallTiles > 4)
@@ -110,9 +106,9 @@ public class CavesMapGenerator : MonoBehaviour
 
     int GetSurroundingWallCount(int[,] map, int x, int y)
     {
-        int wallCount = 0;
-        for (int nX = x - 1; nX <= x + 1; nX++)
-        for (int nY = y - 1; nY <= y + 1; nY++)
+        var wallCount = 0;
+        for (var nX = x - 1; nX <= x + 1; nX++)
+        for (var nY = y - 1; nY <= y + 1; nY++)
         {
             if (nX == nY)
             {
@@ -134,8 +130,8 @@ public class CavesMapGenerator : MonoBehaviour
     {
         if (_map != null)
         {
-            for (int x = 0; x < Width; x++)
-            for (int y = 0; y < Height; y++)
+            for (var x = 0; x < Width; x++)
+            for (var y = 0; y < Height; y++)
             {
                 Gizmos.color = (_map[x, y] == 1) ? Color.black : Color.white;
                 var pos = new Vector3(-Width / 2 + x + .5f, 0, -Height / 2 + y + .5f);

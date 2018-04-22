@@ -1,18 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public static class Events
 {
     public struct Explosion
     {
-        public Vector3 worldSpacePosition;
-        public int radius;
+        public Vector3 WorldSpacePosition;
+        public readonly int Radius;
 
         public Explosion(Vector3 worldSpacePosition, int radius)
         {
-            this.worldSpacePosition = worldSpacePosition;
-            this.radius = radius;
+            WorldSpacePosition = worldSpacePosition;
+            Radius = radius;
         }
     }
 }

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Networking.NetworkSystem;
-using System.Xml.Linq;
 using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 using Debug = UnityEngine.Debug;
@@ -14,9 +10,6 @@ using Debug = UnityEngine.Debug;
 public class WavyIslandMapGenerator : MonoBehaviour
 {
     private const string MapDisplayName = "MapDisplay";
-    // TODO: probably need to spam some unit tests on this to make sure we get all the edge cases correct for top-level get and set
-
-    // TODO: add a benchmarking project to test other performance optimisations
 
     public int Width = 512;
     public int Height = 128;
@@ -31,10 +24,8 @@ public class WavyIslandMapGenerator : MonoBehaviour
     [Range(0.01f, 0.99f)] public float PerlinThreshold = 0.2f;
     [Range(0.01f, 1f)] public float PerlinScale = 0.05f;
 
-    [Range(0,5)]
-    public int DilatePasses = 3;
-    [Range(0,5)]
-    public int SmoothPasses = 3;
+    [Range(0, 5)] public int DilatePasses = 3;
+    [Range(0, 5)] public int SmoothPasses = 3;
 
     [SerializeField] private MapData _map;
     private MeshFilter[] _collisionMeshFilters;
@@ -44,19 +35,24 @@ public class WavyIslandMapGenerator : MonoBehaviour
     private CustomSampler _isSolidAtChecksCustomSampler;
     private CustomSampler _marchingCubesSwitchCustomSampler;
 
-    void Start()
+    // TODO: probably need to spam some unit tests on this to make sure we get all the edge cases correct for top-level get and set
+
+    // TODO: add a benchmarking project to test other performance optimisations
+
+
+    private void Start()
     {
         _isSolidAtChecksCustomSampler = CustomSampler.Create("IsSolidAt checks");
         _marchingCubesSwitchCustomSampler = CustomSampler.Create("MarchingCubesSwitch");
         StartCoroutine(GenerateMap());
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         EventManager.Instance.StartListening<Events.Explosion>(OnExplosion);
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
         // TODO: it looks like EventManager always gets destroyed before we call this
         // do we actually need to clean up here?
@@ -65,7 +61,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
 
     private void OnExplosion(Events.Explosion explosion)
     {
-        RemoveCircle(_map, transform.InverseTransformPoint(explosion.worldSpacePosition), explosion.radius);
+        RemoveCircle(_map, transform.InverseTransformPoint(explosion.WorldSpacePosition), explosion.Radius);
     }
 
     private void RemoveCircle(MapData map, Vector3 localSpace, int explosionRadius)
@@ -76,21 +72,17 @@ public class WavyIslandMapGenerator : MonoBehaviour
 
         Profiler.BeginSample("UpdateMapData");
 
-        int pixelsCleared = 0;
+        var pixelsCleared = 0;
         map.ChangedChunkIndexes.Clear();
-        for (int ex = -explosionRadius; ex < +explosionRadius; ex++)
-        for (int ey = -explosionRadius; ey < +explosionRadius; ey++)
+        for (var ex = -explosionRadius; ex < +explosionRadius; ex++)
+        for (var ey = -explosionRadius; ey < +explosionRadius; ey++)
         {
-            var x = (int)localSpace.x + ex;
-            var y = (int)localSpace.y + ey;
+            var x = (int) localSpace.x + ex;
+            var y = (int) localSpace.y + ey;
             if (x < 0 || x >= Width || y < 0 || y >= Height)
-            {
                 continue;
-            }
-            if (ex*ex + ey*ey > explosionRadius * explosionRadius)
-            {
+            if (ex * ex + ey * ey > explosionRadius * explosionRadius)
                 continue;
-            }
 
             map.Set(x, y, false);
             pixelsCleared++;
@@ -106,21 +98,20 @@ public class WavyIslandMapGenerator : MonoBehaviour
 
         Debug.LogFormat("RemoveCircle {0} {1} pixelsCleared: {2} chunkIdsToUpdate {3} elapsed-ms {4}",
             localSpace, explosionRadius, pixelsCleared,
-            String.Join(",", chunkIdsToUpdate.Select(x => x.ToString()).ToArray()), removeCircleTimer.Elapsed.TotalMilliseconds);
+            string.Join(",", chunkIdsToUpdate.Select(x => x.ToString()).ToArray()),
+            removeCircleTimer.Elapsed.TotalMilliseconds);
 
         Profiler.EndSample();
     }
 
-    void Update()
+    private void Update()
     {
         // TODO probably going to need a more general map/game manager at some point - UI trigger?
         if (Input.GetButtonDown("RegenMap"))
-        {
             StartCoroutine(GenerateMap());
-        }
     }
 
-    IEnumerator GenerateMap()
+    private IEnumerator GenerateMap()
     {
         var options = new WavyIslandMapGenerationOptions
         {
@@ -134,28 +125,18 @@ public class WavyIslandMapGenerator : MonoBehaviour
         };
 
         if (UseRandomSeed)
-        {
             options.Seed = Time.time.GetHashCode();
-        }
 
         var generation = GeneratesWavyIslandMaps.GenerateMap(options);
         while (generation.MoveNext())
-        {
             // if we needed to bring back the generation algorithm some logic could go here
             _map = generation.Current;
-        }
 
         ClearChildren();
         AddCollisionMesh();
         AddDisplayMesh();
 
         yield break;
-    }
-
-    private void RemoveDisplayMesh()
-    {
-        var displayMesh = transform.Find(MapDisplayName);
-        Destroy(displayMesh.gameObject);
     }
 
     private void AddDisplayMesh()
@@ -199,7 +180,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
             var collisionMesh = new Mesh();
             WriteMapToCollisionMesh(chunk, collisionMesh);
 
-            var mapCollisionName = "MapCollision_"+i;
+            var mapCollisionName = "MapCollision_" + i;
             var mapCollision =
                 new GameObject(mapCollisionName, typeof(MeshFilter), typeof(MeshCollider) /*, typeof(MeshRenderer)*/);
             mapCollision.transform.SetParent(transform, false);
@@ -223,7 +204,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
         foreach (var chunkIndex in chunkIdsToUpdate)
         {
             var chunk = _map.MapChunks[chunkIndex];
-            var collisionMesh = new Mesh { indexFormat = IndexFormat.UInt32 };
+            var collisionMesh = new Mesh {indexFormat = IndexFormat.UInt32};
             WriteMapToCollisionMesh(chunk, collisionMesh);
 
             _collisionMeshFilters[chunkIndex].mesh = collisionMesh;
@@ -238,9 +219,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
         Profiler.BeginSample("WavyIslandMapGenerator.ClearChildren");
 
         foreach (var child in transform.Cast<Transform>().ToList())
-        {
             Destroy(child.gameObject);
-        }
 
         Profiler.EndSample();
     }
@@ -253,34 +232,32 @@ public class WavyIslandMapGenerator : MonoBehaviour
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
-        var left = 1+chunk.XOffset;
-        var bottom = 1+chunk.YOffset;
+        var left = 1 + chunk.XOffset;
+        var bottom = 1 + chunk.YOffset;
 
         Profiler.BeginSample("Main loop");
         // ref: https://en.wikipedia.org/wiki/Marching_squares
-        for (int mapY = 0; mapY < MapChunk.ChunkSize - 1; mapY++)
+        for (var mapY = 0; mapY < MapChunk.ChunkSize - 1; mapY++)
         {
-            var yc = chunk.Chunk[mapY];
-            var y1c = chunk.Chunk[mapY + 1];
+            var yRow = chunk.Chunk[mapY];
+            var y1Row = chunk.Chunk[mapY + 1];
 
-            if ((yc == 0 && y1c == 0) || (yc == UInt64.MaxValue && y1c == UInt64.MaxValue))
-            {
+            if (yRow == 0 && y1Row == 0 || yRow == ulong.MaxValue && y1Row == ulong.MaxValue)
                 continue;
-            }
 
-            for (int mapX = 0; mapX < MapChunk.ChunkSize - 1; mapX++)
+            for (var mapX = 0; mapX < MapChunk.ChunkSize - 1; mapX++)
             {
                 var cell = 0;
 
                 _isSolidAtChecksCustomSampler.Begin();
 
-                if ((yc & 1UL << mapX) > 0) { cell += 1; }
-                if ((yc & 1UL << mapX + 1) > 0) { cell += 2; }
-                if ((y1c & 1UL << mapX + 1) > 0) { cell += 4; }
-                if ((y1c & 1UL << mapX) > 0) { cell += 8; }
+                if ((yRow & (1UL << mapX)) > 0) cell += 1;
+                if ((yRow & (1UL << (mapX + 1))) > 0) cell += 2;
+                if ((y1Row & (1UL << (mapX + 1))) > 0) cell += 4;
+                if ((y1Row & (1UL << mapX)) > 0) cell += 8;
                 _isSolidAtChecksCustomSampler.End();
 
-                if (cell == 0 || cell == 15) { continue; }
+                if (cell == 0 || cell == 15) continue;
 
                 _marchingCubesSwitchCustomSampler.Begin();
                 // +8  +4
@@ -426,9 +403,10 @@ public class WavyIslandMapGenerator : MonoBehaviour
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
-        BuildQuad(vertices, triangles, new Vector3(), new Vector3(0, Height), new Vector3(Width, Height), new Vector3(Width, 0));
+        BuildQuad(vertices, triangles, new Vector3(), new Vector3(0, Height), new Vector3(Width, Height),
+            new Vector3(Width, 0));
 
-        var uv = new[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };
+        var uv = new[] {new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0)};
 
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
@@ -438,7 +416,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
 
     private void BuildQuad(List<Vector3> vertices, List<int> triangles, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
     {
-        int index = vertices.Count - 1;
+        var index = vertices.Count - 1;
         vertices.Add(v1);
         vertices.Add(v2);
         vertices.Add(v3);
@@ -453,17 +431,16 @@ public class WavyIslandMapGenerator : MonoBehaviour
 
     private Texture2D GetMapTexture()
     {
-        var texture = new Texture2D(Width, Height, TextureFormat.ARGB32, false);
-        texture.filterMode = FilterMode.Point;
+        var texture = new Texture2D(Width, Height, TextureFormat.ARGB32, false) {filterMode = FilterMode.Point};
 
-        Color32[] newColors = new Color32[Width * Height];
-        for (int x = 0; x < Width; x++)
-            for (int y = 0; y < Height; y++)
-            {
-                var mapValue = _map.Get(x, y);
-                if (!mapValue) { newColors[y * Width + x] = new Color32(0, 0, 0, 0); }
-                else { newColors[y * Width + x] = new Color32(128, 128, 128, 255); }
-            }
+        var newColors = new Color32[Width * Height];
+        for (var x = 0; x < Width; x++)
+        for (var y = 0; y < Height; y++)
+        {
+            var mapValue = _map.Get(x, y);
+            if (!mapValue) newColors[y * Width + x] = new Color32(0, 0, 0, 0);
+            else newColors[y * Width + x] = new Color32(128, 128, 128, 255);
+        }
         texture.SetPixels32(newColors);
         texture.Apply();
 
@@ -474,34 +451,30 @@ public class WavyIslandMapGenerator : MonoBehaviour
     {
         Profiler.BeginSample("RemoveCircleFromMapTexture");
 
-        for (int ex = -explosionRadius; ex < +explosionRadius; ex++)
-        for (int ey = -explosionRadius; ey < +explosionRadius; ey++)
+        for (var ex = -explosionRadius; ex < +explosionRadius; ex++)
+        for (var ey = -explosionRadius; ey < +explosionRadius; ey++)
         {
             var x = (int) localSpace.x + ex;
             var y = (int) localSpace.y + ey;
             if (x < 0 || x >= Width || y < 0 || y >= Height)
-            {
                 continue;
-            }
             if (ex * ex + ey * ey > explosionRadius * explosionRadius)
-            {
                 continue;
-            }
 
-            mapTexture.SetPixel(x, y, new Color(0,0,0,0));
+            mapTexture.SetPixel(x, y, new Color(0, 0, 0, 0));
         }
         mapTexture.Apply();
         Profiler.EndSample();
     }
 
-    void OnDrawGizmos()
+    private void OnDrawGizmos()
     {
         Gizmos.matrix = transform.localToWorldMatrix;
 
         if (_map == null)
         {
             Gizmos.color = Color.gray;
-            Gizmos.DrawCube(new Vector3(Width/2, Height/2), new Vector3(Width, Height));
+            Gizmos.DrawCube(new Vector3(Width / 2f, Height / 2f), new Vector3(Width, Height));
         }
     }
 }

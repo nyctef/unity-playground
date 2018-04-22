@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -25,11 +23,11 @@ public class CharacterMovement : MonoBehaviour
     private Transform _sprite;
 
     private Vector3 _fallingVelocity;
-    private float _coyoteTime = 0;
+    private float _coyoteTime;
 
     private bool _facingLeft;
 
-    private string _currentAnimation = null;
+    private string _currentAnimation;
 
     void Start()
     {
@@ -103,6 +101,7 @@ public class CharacterMovement : MonoBehaviour
         }
 
         // bump off ceilings
+        // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags CollisionFlags just doesn't have the attribute
         if ((_controller.collisionFlags & CollisionFlags.Above) != 0)
         {
             _fallingVelocity.y = Math.Min(_fallingVelocity.y, 0);
@@ -116,14 +115,7 @@ public class CharacterMovement : MonoBehaviour
         else if (jumpInput)
         {
             // do a vertical or horizontal jump depending on if we're moving horizontally
-            if (Math.Abs(move.x) < 0.01f)
-            {
-                _fallingVelocity = VertJumpForce;
-            }
-            else
-            {
-                _fallingVelocity = FlipX(HorizontalJumpForce, _facingLeft);
-            }
+            _fallingVelocity = Math.Abs(move.x) < 0.01f ? VertJumpForce : FlipX(HorizontalJumpForce, _facingLeft);
         }
         else if (Math.Abs(_fallingVelocity.y) < 0.1f)
         {

@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class ExplosionManager : MonoBehaviour
 {
@@ -20,6 +18,6 @@ public class ExplosionManager : MonoBehaviour
     {
         // TODO add some particles and other effects
         // TODO cope with different explosion sizes
-        Instantiate(Explosion50Prefab, explosion.worldSpacePosition, Quaternion.identity);
+        Instantiate(Explosion50Prefab, explosion.WorldSpacePosition, Quaternion.identity);
     }
 }

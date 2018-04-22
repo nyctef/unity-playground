@@ -15,6 +15,8 @@ improve map performance
  
 kill player/targets if they fall below a certain level
 
+common system for projectiles/players for things that can die and trigger events when they do?
+
 more cell automata stuff
  - add edges to top of level
  - to find spawnable locations: flood fill sky and then find bottom edge?

@@ -13,11 +13,6 @@ public class SimpleSpriteAnimator : MonoBehaviour
         public float FramesPerSec = 5;
         public bool Loop = true;
 
-        public float Duration
-        {
-            get { return Frames.Length * FramesPerSec; }
-        }
-
         public float SecsPerFrame
         {
             get { return 1.0f / FramesPerSec; }

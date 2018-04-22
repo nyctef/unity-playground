@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 
 /// <summary>
 /// A 64x64 chunk of map data

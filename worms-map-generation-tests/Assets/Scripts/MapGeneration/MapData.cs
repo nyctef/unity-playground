@@ -9,7 +9,7 @@ public class MapData
     public int ChunksHigh;
 
     // TODO HashSet is overkill here - this could probably be an int array or a bitmap or something
-    public HashSet<int> ChangedChunkIndexes = new HashSet<int>();
+    public readonly HashSet<int> ChangedChunkIndexes = new HashSet<int>();
 
     public void Init(int width, int height)
     {
@@ -19,10 +19,10 @@ public class MapData
         ChunksHigh = height / MapChunk.ChunkSize + (height % MapChunk.ChunkSize > 0 ? 1 : 0);
 
         MapChunks = new MapChunk[ChunksWide * ChunksHigh];
-        for (int x = 0; x < ChunksWide; x++)
-        for (int y = 0; y < ChunksHigh; y++)
+        for (var x = 0; x < ChunksWide; x++)
+        for (var y = 0; y < ChunksHigh; y++)
         {
-            int i = y * ChunksWide + x;
+            var i = y * ChunksWide + x;
             MapChunks[i] = new MapChunk();
             MapChunks[i].Init(x * MapChunk.ChunkSize, y * MapChunk.ChunkSize);
         }
