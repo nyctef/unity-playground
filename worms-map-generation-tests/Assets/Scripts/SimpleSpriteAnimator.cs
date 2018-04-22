@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 // originally based on https://www.gamasutra.com/blogs/JoeStrout/20150807/250646/2D_Animation_Methods_in_Unity.php
 public class SimpleSpriteAnimator : MonoBehaviour
 {
-    [Serializable]
-    public class Anim
+    [CreateAssetMenu(menuName = "Anim")]
+    public class Anim : ScriptableObject
     {
         public string Name;
         public Sprite[] Frames;
@@ -87,7 +88,7 @@ public class SimpleSpriteAnimator : MonoBehaviour
         var index = Animations.FindIndex(a => a.Name == animName);
         if (index < 0)
         {
-            Debug.LogError(gameObject + ": No such animation: " + animName);
+            Debug.LogError(gameObject + ": No such animation: " + animName + " (got: " + String.Join(",", Animations.Select(x => x.Name).ToArray()) + ")");
         }
         else
         {

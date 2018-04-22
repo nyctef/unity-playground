@@ -647,23 +647,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Animations:
-  - Name: Walk
-    Frames:
-    - {fileID: 21300000, guid: 8f0a71211a85b0345aaeba565cff861e, type: 3}
-    - {fileID: 21300002, guid: 8f0a71211a85b0345aaeba565cff861e, type: 3}
-    - {fileID: 21300004, guid: 8f0a71211a85b0345aaeba565cff861e, type: 3}
-    - {fileID: 21300006, guid: 8f0a71211a85b0345aaeba565cff861e, type: 3}
-    - {fileID: 21300008, guid: 8f0a71211a85b0345aaeba565cff861e, type: 3}
-    - {fileID: 21300010, guid: 8f0a71211a85b0345aaeba565cff861e, type: 3}
-    - {fileID: 21300012, guid: 8f0a71211a85b0345aaeba565cff861e, type: 3}
-    - {fileID: 21300014, guid: 8f0a71211a85b0345aaeba565cff861e, type: 3}
-    FramesPerSec: 10
-    Loop: 1
-  - Name: Idle
-    Frames:
-    - {fileID: 21300000, guid: 8f0a71211a85b0345aaeba565cff861e, type: 3}
-    FramesPerSec: 20
-    Loop: 1
+  - {fileID: 11400000, guid: e6581faf69bd62945a4fff18a64a8141, type: 2}
+  - {fileID: 11400000, guid: cadeb04b70471814ca1f1e84d947c525, type: 2}
   CurrentFrame: 0
 --- !u!143 &1567319406
 CharacterController:
@@ -871,7 +856,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e85a993a9deeba246b875b6efb951953, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MapContainer: {fileID: 1737550504}
 --- !u!4 &2037350880
 Transform:
   m_ObjectHideFlags: 0
