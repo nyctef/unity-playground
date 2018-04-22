@@ -249,13 +249,19 @@ public static class GeneratesWavyIslandMaps
 
     private struct Coordinate
     {
-        public int X;
-        public int Y;
+        public readonly int X;
+        public readonly int Y;
+
+        public Coordinate(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
     }
 
     private static Coordinate Coord(int x, int y)
     {
-        return new Coordinate { X = x, Y = y };
+        return new Coordinate(x,y);
     }
 
     private static void Dilate(ref Bitmap map, ref Bitmap tmpMap, WavyIslandMapGenerationOptions options)
