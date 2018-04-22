@@ -23,6 +23,11 @@ public static class GeneratesWavyIslandMaps
             BitArray = bitArray;
         }
 
+        public bool Get(int x, int y)
+        {
+            return BitArray[y * Width + x];
+        }
+
         public void Set(int x, int y, bool value)
         {
             BitArray[y * Width + x] = value;
@@ -90,12 +95,9 @@ public static class GeneratesWavyIslandMaps
         var mapData = new MapData();
         mapData.Init(bitmap.Width, bitmap.Height);
         for (int y = 0; y < bitmap.Height; y++)
+        for (int x = 0; x < bitmap.Width; x++)
         {
-            var eachY = bitmap.Width * y;
-            for (int x = 0; x < bitmap.Width; x++)
-            {
-                mapData.Set(x, y, bitmap.BitArray[eachY + x]);
-            }
+            mapData.Set(x, y, bitmap.BitArray[bitmap.Width*y+x]);
         }
         return mapData;
     }
@@ -164,12 +166,12 @@ public static class GeneratesWavyIslandMaps
             Debug.LogWarning("maps different sizes");
             return;
         }
-        if (sourceMap.BitArray[starty * sourceMap.Width + startx] != sourceValue)
+        if (sourceMap.Get(startx, starty) != sourceValue)
         {
             //Debug.Log("FloodFill sourceMap at " + startx + "," + starty + " is not " + sourceValue);
             return;
         }
-        if (targetMap.BitArray[starty * targetMap.Width + startx] == targetValue)
+        if (targetMap.Get(startx, starty) == targetValue)
         {
             //Debug.Log("FloodFill targetMap at " + startx + "," + starty + " is already " + targetValue);
             return;
@@ -197,7 +199,7 @@ public static class GeneratesWavyIslandMaps
     private static void Fill(Bitmap sourceMap, Bitmap targetMap, bool sourceValue, bool targetValue, Queue<Coordinate> q, int x, int y)
     {
         if (x < 0 || x >= sourceMap.Width || y < 0 || y >= sourceMap.Height) { return; }
-        if (sourceMap.BitArray[y * sourceMap.Width + x] == sourceValue && targetMap.BitArray[y * targetMap.Width + x] != targetValue)
+        if (sourceMap.Get(x, y) == sourceValue && targetMap.Get(x, y) != targetValue)
         {
             targetMap.Set(x, y, targetValue);
             q.Enqueue(Coord(x, y));
@@ -221,7 +223,7 @@ public static class GeneratesWavyIslandMaps
         for (var x = 0; x < options.Width; x++)
         {
             var neighbourWallTiles = GetSurroundingWallCount(map, x, y, targetValue);
-            tmpMap.Set(x, y, neighbourWallTiles > 1 ? targetValue : map.BitArray[y * map.Width + x]);
+            tmpMap.Set(x, y, neighbourWallTiles > 1 ? targetValue : map.Get(x, y));
         }
 
         Swap(ref map, ref tmpMap);
@@ -243,7 +245,7 @@ public static class GeneratesWavyIslandMaps
             }
             else
             {
-                tmpMap.Set(x, y, map.BitArray[y * map.Width + x]);
+                tmpMap.Set(x, y, map.Get(x, y));
             }
         }
 
@@ -252,33 +254,23 @@ public static class GeneratesWavyIslandMaps
 
     static int GetSurroundingWallCount(Bitmap map, int x, int y, bool targetValue)
     {
-        Profiler.BeginSample("GetSurroundingWallCount");
-
         var wallCount = 0;
         for (var nY = y - 1; nY <= y + 1; nY++)
+        for (var nX = x - 1; nX <= x + 1; nX++)
         {
-            var eachY = nY * map.Width;
-            for (var nX = x - 1; nX <= x + 1; nX++)
+            if (nX == nY)
             {
-                if (nX == nY)
-                {
-                    continue;
-                }
-                if (nX < 0 || nX >= map.Width || nY < 0 || nY >= map.Height)
-                {
-                    if (nY < 0)
-                    {
-                        wallCount++;
-                    }
-                }
-                else
-                {
-                    wallCount += map.BitArray[eachY + nX] == targetValue ? 1 : 0;
-                }
+                continue;
+            }
+            if (nX < 0 || nX >= map.Width || nY < 0 || nY >= map.Height)
+            {
+                if (nY < 0) { wallCount++; }
+            }
+            else
+            {
+                wallCount += map.Get(nX, nY) == targetValue ? 1 : 0;
             }
         }
-
-        Profiler.EndSample();
         return wallCount;
     }
 
