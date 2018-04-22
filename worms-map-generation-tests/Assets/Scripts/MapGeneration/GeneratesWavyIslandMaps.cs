@@ -52,8 +52,8 @@ public static class GeneratesWavyIslandMaps
 
         private void SetNeighbourCounts(int x, int y, bool live)
         {
-            for (int ny = y - 1; ny < y + 1; ny++)
-            for (int nx = x - 1; nx < x + 1; nx++)
+            for (int ny = y - 1; ny <= y + 1; ny++)
+            for (int nx = x - 1; nx <= x + 1; nx++)
             {
                 if (nx < 0 || nx >= Width || ny < 0 || ny >= Height)
                 {
