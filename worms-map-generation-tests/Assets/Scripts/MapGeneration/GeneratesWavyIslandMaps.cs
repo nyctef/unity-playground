@@ -1,52 +1,59 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using Assets.Utils;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 using Random = System.Random;
 
 public static class GeneratesWavyIslandMaps
 {
     public static IEnumerator<MapData> GenerateMap(WavyIslandMapGenerationOptions options)
     {
-        Debug.Log("WavyIslandMapGenerator GenerateMap with seed " + options.Seed);
+        Debug.Log("GeneratesWavyIslandMaps GenerateMap start with seed " + options.Seed);
 
-        Debug.Log("map create");
+        var timer = Stopwatch.StartNew();
 
-
-        Debug.Log("fill map");
         var noiseData = RandomFillMap(options);
+
+        var fillTime = timer.Lap();
 
         // TODO: display noise map somehow?
 
-        Debug.Log("threshold map");
         var map = ThresholdMap(noiseData, options);
 
+        var thresholdTime = timer.Lap();
         yield return map;
 
         var tmpMap = new MapData();
         tmpMap.Init(options.Width, options.Height);
 
-        Debug.Log("pick islands");
         PickIslands(ref map, ref tmpMap);
 
+        var islandsTime = timer.Lap();
         yield return map;
 
         for (var i = 0; i < options.DilatePasses; i++)
         {
-            Debug.Log("dilate");
             Dilate(ref map, ref tmpMap, true, options);
 
             yield return map;
         }
 
+        var dilateTime = timer.Lap();
+
         for (var i = 0; i < options.SmoothPasses; i++)
         {
-            Debug.Log("smooth");
             Smooth(ref map, ref tmpMap, true, options);
 
             yield return map;
         }
 
-        Debug.Log("done");
+        var smoothTime = timer.Lap();
+
+        Debug.LogFormat(
+            "GeneratesWavyIslandMaps GenerateMap done fillTime {0} thresholdTime {1} islandsTime {2} dilateTime {3} smoothTime {4}",
+            fillTime, thresholdTime, islandsTime, dilateTime, smoothTime);
         yield return map;
     }
 
