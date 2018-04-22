@@ -1,7 +1,5 @@
 pull wavyislandmapgenerator apart some more / properly
 
-investigate holes in collision mesh - caused by chunk boundaries?
-
 add some targets for explosions to hit
 
 apply damage on explosions
