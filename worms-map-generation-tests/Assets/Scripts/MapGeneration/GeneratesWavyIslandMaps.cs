@@ -13,8 +13,8 @@ public static class GeneratesWavyIslandMaps
 {
     private class Bitmap
     {
-        private const byte LiveBit = (1<<7);
-        private const byte NeighbourCountBits = Byte.MaxValue - (1 << 7);
+        internal const byte LiveBit = (1<<7);
+        internal const byte NeighbourCountBits = Byte.MaxValue - (1 << 7);
         public int Width;
         public int Height;
         public byte[] CellArray;
@@ -265,9 +265,8 @@ public static class GeneratesWavyIslandMaps
         for (var y = 0; y < options.Height; y++)
         for (var x = 0; x < options.Width; x++)
         {
-            var currentlyLive = map.Get(x, y);
-            var neighbourWallTiles = map.GetNeighbourCount(x, y);
-            if (!currentlyLive && neighbourWallTiles > 1)
+            var cell = map.CellArray[y * map.Width + x];
+            if ((cell & Bitmap.LiveBit) == 0 && (cell & Bitmap.NeighbourCountBits) > 1)
             {
                 tmpMap.Set(x, y, true);
             }
@@ -283,12 +282,12 @@ public static class GeneratesWavyIslandMaps
         for (var y = 0; y < options.Height; y++)
         for (var x = 0; x < options.Width; x++)
         {
-            var neighbourWallTiles = map.GetNeighbourCount(x, y);
-            if (neighbourWallTiles > 4)
+            var cell = map.CellArray[y * map.Width + x];
+            if ((cell & Bitmap.LiveBit) == 0 && (cell & Bitmap.NeighbourCountBits) > 4)
             {
                 tmpMap.Set(x, y, true);
             }
-            else if (neighbourWallTiles < 4)
+            else if ((cell & Bitmap.LiveBit) != 0 && (cell & Bitmap.NeighbourCountBits) < 4)
             {
                 tmpMap.Set(x, y, false);
             }
