@@ -130,7 +130,7 @@ public class WavyIslandMapGenerator : MonoBehaviour
         var generation = GeneratesWavyIslandMaps.GenerateMap(options);
         while (generation.MoveNext())
             // if we needed to bring back the generation algorithm some logic could go here
-            _map = generation.Current;
+            yield return _map = generation.Current;
 
         ClearChildren();
         AddCollisionMesh();

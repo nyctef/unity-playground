@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,25 +13,67 @@ public static class GeneratesWavyIslandMaps
 {
     private class Bitmap
     {
+        private const byte LiveBit = (1<<7);
+        private const byte NeighbourCountBits = Byte.MaxValue - (1 << 7);
         public int Width;
         public int Height;
-        public BitArray BitArray;
+        public byte[] CellArray;
 
-        public Bitmap(int width, int height, BitArray bitArray)
+        public Bitmap(int width, int height, byte[] cellArray)
         {
             Width = width;
             Height = height;
-            BitArray = bitArray;
+            CellArray = cellArray;
         }
 
         public bool Get(int x, int y)
         {
-            return BitArray[y * Width + x];
+            return (CellArray[y * Width + x] & LiveBit) != 0;
         }
 
-        public void Set(int x, int y, bool value)
+        public byte GetNeighbourCount(int x, int y)
         {
-            BitArray[y * Width + x] = value;
+            return (byte) (CellArray[y * Width + x] & NeighbourCountBits);
+        }
+
+        public void Set(int x, int y, bool live)
+        {
+            var current = CellArray[y * Width + x];
+            if (((current & LiveBit) != 0) == live)
+            {
+                return; // state unchanged
+            }
+
+            var currentNeighbourCount = current & NeighbourCountBits;
+            CellArray[y * Width + x] = (byte)((live ? LiveBit : 0) + currentNeighbourCount);
+
+            SetNeighbourCounts(x, y, live);
+        }
+
+        private void SetNeighbourCounts(int x, int y, bool live)
+        {
+            for (int ny = y - 1; ny < y + 1; ny++)
+            for (int nx = x - 1; nx < x + 1; nx++)
+            {
+                if (nx < 0 || nx >= Width || ny < 0 || ny >= Height)
+                {
+                    continue;
+                }
+
+                if (!live)
+                {
+                    CellArray[ny * Width + nx]--;
+                }
+                else
+                {
+                    CellArray[ny * Width + nx]++;
+                }
+            }
+        }
+
+        public void Set(int i, bool live)
+        {
+            Set(i % Width, i/Width, live);
         }
     }
 
@@ -41,42 +84,38 @@ public static class GeneratesWavyIslandMaps
         var timer = Stopwatch.StartNew();
 
         var noiseData = RandomFillMap(options);
+        yield return null;
 
         var fillTime = timer.Lap();
 
         // TODO: display noise map/bitmap somehow?
 
         var bitmap = ThresholdMap(noiseData, options);
+        var tmpMap = new Bitmap(options.Width, options.Height, new byte[options.Width * options.Height]);
 
         var thresholdTime = timer.Lap();
         yield return null;
-
-        var tmpMap = new Bitmap(options.Width, options.Height, new BitArray(options.Width * options.Height));
 
         PickIslands(ref bitmap, ref tmpMap);
 
         var islandsTime = timer.Lap();
         yield return null;
 
-        Profiler.BeginSample("Dilate");
         for (var i = 0; i < options.DilatePasses; i++)
         {
-            Dilate(ref bitmap, ref tmpMap, true, options);
+            Dilate(ref bitmap, ref tmpMap, options);
 
             yield return null;
         }
-        Profiler.EndSample();
 
         var dilateTime = timer.Lap();
 
-        Profiler.BeginSample("Smooth");
         for (var i = 0; i < options.SmoothPasses; i++)
         {
-            Smooth(ref bitmap, ref tmpMap, true, options);
+            Smooth(ref bitmap, ref tmpMap, options);
 
             yield return null;
         }
-        Profiler.EndSample();
 
         var smoothTime = timer.Lap();
 
@@ -97,7 +136,7 @@ public static class GeneratesWavyIslandMaps
         for (int y = 0; y < bitmap.Height; y++)
         for (int x = 0; x < bitmap.Width; x++)
         {
-            mapData.Set(x, y, bitmap.BitArray[bitmap.Width*y+x]);
+            mapData.Set(x, y, bitmap.Get(x,y));
         }
         return mapData;
     }
@@ -144,14 +183,16 @@ public static class GeneratesWavyIslandMaps
     {
         var threshold = (byte)(options.PerlinThreshold * 255);
 
-        var bitArray = new BitArray(options.Width * options.Height);
+        var bitArray = new byte[options.Width * options.Height];
+
+        var thresholdMap = new Bitmap(options.Width, options.Height, bitArray);
 
         for (int i = 0; i < options.Width * options.Height; i++)
         {
-            bitArray[i] = noiseData[i] > threshold;
+            thresholdMap.Set(i, noiseData[i] > threshold);
         }
 
-        return new Bitmap(options.Width, options.Height, bitArray);
+        return thresholdMap;
     }
 
     static void FloodFill(Bitmap sourceMap, Bitmap targetMap, bool sourceValue, bool targetValue, int startx, int starty)
@@ -217,61 +258,43 @@ public static class GeneratesWavyIslandMaps
         return new Coordinate { X = x, Y = y };
     }
 
-    static void Dilate(ref Bitmap map, ref Bitmap tmpMap, bool targetValue, WavyIslandMapGenerationOptions options)
+    private static void Dilate(ref Bitmap map, ref Bitmap tmpMap, WavyIslandMapGenerationOptions options)
     {
+        map.CellArray.CopyTo(tmpMap.CellArray, 0);
+
         for (var y = 0; y < options.Height; y++)
         for (var x = 0; x < options.Width; x++)
         {
-            var neighbourWallTiles = GetSurroundingWallCount(map, x, y, targetValue);
-            tmpMap.Set(x, y, neighbourWallTiles > 1 ? targetValue : map.Get(x, y));
+            var currentlyLive = map.Get(x, y);
+            var neighbourWallTiles = map.GetNeighbourCount(x, y);
+            if (!currentlyLive && neighbourWallTiles > 1)
+            {
+                tmpMap.Set(x, y, true);
+            }
         }
 
         Swap(ref map, ref tmpMap);
     }
 
-    static void Smooth(ref Bitmap map, ref Bitmap tmpMap, bool targetValue, WavyIslandMapGenerationOptions options)
+    private static void Smooth(ref Bitmap map, ref Bitmap tmpMap, WavyIslandMapGenerationOptions options)
     {
+        map.CellArray.CopyTo(tmpMap.CellArray, 0);
+
         for (var y = 0; y < options.Height; y++)
         for (var x = 0; x < options.Width; x++)
         {
-            var neighbourWallTiles = GetSurroundingWallCount(map, x, y, targetValue);
+            var neighbourWallTiles = map.GetNeighbourCount(x, y);
             if (neighbourWallTiles > 4)
             {
-                tmpMap.Set(x, y, targetValue);
+                tmpMap.Set(x, y, true);
             }
             else if (neighbourWallTiles < 4)
             {
                 tmpMap.Set(x, y, false);
             }
-            else
-            {
-                tmpMap.Set(x, y, map.Get(x, y));
-            }
         }
 
         Swap(ref map, ref tmpMap);
-    }
-
-    static int GetSurroundingWallCount(Bitmap map, int x, int y, bool targetValue)
-    {
-        var wallCount = 0;
-        for (var nY = y - 1; nY <= y + 1; nY++)
-        for (var nX = x - 1; nX <= x + 1; nX++)
-        {
-            if (nX == nY)
-            {
-                continue;
-            }
-            if (nX < 0 || nX >= map.Width || nY < 0 || nY >= map.Height)
-            {
-                if (nY < 0) { wallCount++; }
-            }
-            else
-            {
-                wallCount += map.Get(nX, nY) == targetValue ? 1 : 0;
-            }
-        }
-        return wallCount;
     }
 
     static void PickIslands(ref Bitmap map, ref Bitmap tmpMap)
