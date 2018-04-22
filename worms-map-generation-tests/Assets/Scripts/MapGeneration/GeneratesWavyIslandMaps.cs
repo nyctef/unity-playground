@@ -1,13 +1,39 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Assets.Utils;
 using UnityEngine;
+using UnityEngine.Profiling;
 using Debug = UnityEngine.Debug;
 using Random = System.Random;
 
 public static class GeneratesWavyIslandMaps
 {
+    private class Bitmap
+    {
+        public int Width;
+        public int Height;
+        public BitArray BitArray;
+
+        public Bitmap(int width, int height, BitArray bitArray)
+        {
+            Width = width;
+            Height = height;
+            BitArray = bitArray;
+        }
+
+        public bool Get(int x, int y)
+        {
+            return BitArray[y * Width + x];
+        }
+
+        public void Set(int x, int y, bool value)
+        {
+            BitArray[y * Width + x] = value;
+        }
+    }
+
     public static IEnumerator<MapData> GenerateMap(WavyIslandMapGenerationOptions options)
     {
         Debug.Log("GeneratesWavyIslandMaps GenerateMap start with seed " + options.Seed);
@@ -18,43 +44,62 @@ public static class GeneratesWavyIslandMaps
 
         var fillTime = timer.Lap();
 
-        // TODO: display noise map somehow?
+        // TODO: display noise map/bitmap somehow?
 
-        var map = ThresholdMap(noiseData, options);
+        var bitmap = ThresholdMap(noiseData, options);
 
         var thresholdTime = timer.Lap();
-        yield return map;
+        yield return null;
 
-        var tmpMap = new MapData();
-        tmpMap.Init(options.Width, options.Height);
+        var tmpMap = new Bitmap(options.Width, options.Height, new BitArray(options.Width * options.Height));
 
-        PickIslands(ref map, ref tmpMap);
+        PickIslands(ref bitmap, ref tmpMap);
 
         var islandsTime = timer.Lap();
-        yield return map;
+        yield return null;
 
+        Profiler.BeginSample("Dilate");
         for (var i = 0; i < options.DilatePasses; i++)
         {
-            Dilate(ref map, ref tmpMap, true, options);
+            Dilate(ref bitmap, ref tmpMap, true, options);
 
-            yield return map;
+            yield return null;
         }
+        Profiler.EndSample();
 
         var dilateTime = timer.Lap();
 
+        Profiler.BeginSample("Smooth");
         for (var i = 0; i < options.SmoothPasses; i++)
         {
-            Smooth(ref map, ref tmpMap, true, options);
+            Smooth(ref bitmap, ref tmpMap, true, options);
 
-            yield return map;
+            yield return null;
         }
+        Profiler.EndSample();
 
         var smoothTime = timer.Lap();
 
+        var map = ToMapData(bitmap);
+
+        var toMapDataTime = timer.Lap();
+
         Debug.LogFormat(
-            "GeneratesWavyIslandMaps GenerateMap done fillTime {0} thresholdTime {1} islandsTime {2} dilateTime {3} smoothTime {4}",
-            fillTime, thresholdTime, islandsTime, dilateTime, smoothTime);
+            "GeneratesWavyIslandMaps GenerateMap done fillTime {0} thresholdTime {1} islandsTime {2} dilateTime {3} smoothTime {4} toMapDataTime {5}",
+            fillTime, thresholdTime, islandsTime, dilateTime, smoothTime, toMapDataTime);
         yield return map;
+    }
+
+    private static MapData ToMapData(Bitmap bitmap)
+    {
+        var mapData = new MapData();
+        mapData.Init(bitmap.Width, bitmap.Height);
+        for (int x = 0; x < bitmap.Width; x++)
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            mapData.Set(x, y, bitmap.BitArray[bitmap.Width*y+x]);
+        }
+        return mapData;
     }
 
     static byte[] RandomFillMap(WavyIslandMapGenerationOptions options)
@@ -88,30 +133,28 @@ public static class GeneratesWavyIslandMaps
         return noiseData;
     }
 
-    private static void Swap(ref MapData map, ref MapData tmpMap)
+    private static void Swap(ref Bitmap map, ref Bitmap tmpMap)
     {
         var swap = map;
         map = tmpMap;
         tmpMap = swap;
     }
 
-    static MapData ThresholdMap(byte[] noiseData, WavyIslandMapGenerationOptions options)
+    static Bitmap ThresholdMap(byte[] noiseData, WavyIslandMapGenerationOptions options)
     {
-        var map = new MapData();
-        map.Init(options.Width, options.Height);
-
         var threshold = (byte)(options.PerlinThreshold * 255);
 
-        for (var x = 0; x < options.Width; x++)
-        for (var y = 0; y < options.Height; y++)
+        var bitArray = new BitArray(options.Width * options.Height);
+
+        for (int i = 0; i < options.Width * options.Height; i++)
         {
-            map.Set(x, y, noiseData[y * options.Width + x] > threshold);
+            bitArray[i] = noiseData[i] > threshold;
         }
 
-        return map;
+        return new Bitmap(options.Width, options.Height, bitArray);
     }
 
-    static void FloodFill(MapData sourceMap, MapData targetMap, bool sourceValue, bool targetValue, int startx, int starty)
+    static void FloodFill(Bitmap sourceMap, Bitmap targetMap, bool sourceValue, bool targetValue, int startx, int starty)
     {
         if (startx < 0 || startx >= sourceMap.Width || starty < 0 || starty >= sourceMap.Width)
         {
@@ -153,7 +196,7 @@ public static class GeneratesWavyIslandMaps
         }
     }
 
-    private static void Fill(MapData sourceMap, MapData targetMap, bool sourceValue, bool targetValue, Queue<Coordinate> q, int x, int y)
+    private static void Fill(Bitmap sourceMap, Bitmap targetMap, bool sourceValue, bool targetValue, Queue<Coordinate> q, int x, int y)
     {
         if (x < 0 || x >= sourceMap.Width || y < 0 || y >= sourceMap.Height) { return; }
         if (sourceMap.Get(x, y) == sourceValue && targetMap.Get(x, y) != targetValue)
@@ -174,7 +217,7 @@ public static class GeneratesWavyIslandMaps
         return new Coordinate { X = x, Y = y };
     }
 
-    static void Dilate(ref MapData map, ref MapData tmpMap, bool targetValue, WavyIslandMapGenerationOptions options)
+    static void Dilate(ref Bitmap map, ref Bitmap tmpMap, bool targetValue, WavyIslandMapGenerationOptions options)
     {
         for (var x = 0; x < options.Width; x++)
         for (var y = 0; y < options.Height; y++)
@@ -186,7 +229,7 @@ public static class GeneratesWavyIslandMaps
         Swap(ref map, ref tmpMap);
     }
 
-    static void Smooth(ref MapData map, ref MapData tmpMap, bool targetValue, WavyIslandMapGenerationOptions options)
+    static void Smooth(ref Bitmap map, ref Bitmap tmpMap, bool targetValue, WavyIslandMapGenerationOptions options)
     {
         for (var x = 0; x < options.Width; x++)
         for (var y = 0; y < options.Height; y++)
@@ -209,7 +252,7 @@ public static class GeneratesWavyIslandMaps
         Swap(ref map, ref tmpMap);
     }
 
-    static int GetSurroundingWallCount(MapData map, int x, int y, bool targetValue)
+    static int GetSurroundingWallCount(Bitmap map, int x, int y, bool targetValue)
     {
         var wallCount = 0;
         for (var nX = x - 1; nX <= x + 1; nX++)
@@ -231,7 +274,7 @@ public static class GeneratesWavyIslandMaps
         return wallCount;
     }
 
-    static void PickIslands(ref MapData map, ref MapData tmpMap)
+    static void PickIslands(ref Bitmap map, ref Bitmap tmpMap)
     {
         var fillLineHeights = new[] { 20, 50, 100, 200 };
         foreach (var fillLineHeight in fillLineHeights)
