@@ -1,4 +1,9 @@
-hide reticle when moving?
+clean up R# inspections
+pull wavyislandmapgenerator apart some more / properly
+
+investigate holes in collision mesh - caused by chunk boundaries?
+
+add some targets for explosions to hit
 
 apply damage on explosions
 
@@ -8,11 +13,7 @@ improve map performance
  - explosion (more important) (done to some extent)
  - initial map generation (less important)
  
-investigate holes in collision mesh - caused by chunk boundaries?
-
-kill player if they fall below a certain level
-
-pull wavyislandmapgenerator apart
+kill player/targets if they fall below a certain level
 
 more cell automata stuff
  - add edges to top of level
@@ -21,7 +22,9 @@ more cell automata stuff
  - more scenes to test this? (smaller map size)
 
 spawn player at an actual point on the map
- 
+
+hide reticle when moving?
+
 map: once cell automata stuff is done then set remaining solid ground to texture values
 
 check out Unity 2018 beta for later C# support
