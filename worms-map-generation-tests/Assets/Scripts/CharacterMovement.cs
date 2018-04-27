@@ -64,7 +64,10 @@ public class CharacterMovement : MonoBehaviour
             // Should the whole grenade lifetime be one coroutine?
             Physics.IgnoreCollision(GetComponent<Collider>(), grenade.GetComponent<Collider>());
             var direction = Quaternion.Euler(0, 0, AimAngle) * Vector3.up *GrenadeThrowSpeed;
-            grenade.GetComponent<Rigidbody>().velocity = direction;
+            var rb = grenade.GetComponent<Rigidbody>();
+            rb.velocity = direction;
+            rb.AddTorque(0, 0, UnityEngine.Random.Range(-4, -2) * direction.x, ForceMode.Impulse);
+            Debug.Log("Throwing grenade with velocity " + rb.velocity + " and angular velocity " + rb.angularVelocity);
         }
 
         var move = new Vector3(horizontalInput, 0, 0) * Time.deltaTime * Speed;
