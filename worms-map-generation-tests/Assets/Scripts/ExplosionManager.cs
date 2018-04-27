@@ -23,18 +23,24 @@ public class ExplosionManager : MonoBehaviour
 
         var explosionTargets = Physics.OverlapSphere(explosion.WorldSpacePosition, 50);
         Debug.Log("Explosion affecting "+explosionTargets.Length+ " targets");
-        foreach (var h in explosionTargets)
+        foreach (var target in explosionTargets)
         {
-            var r = h.GetComponent<Rigidbody>();
+            var explosionForce = 1000;
+
+            var r = target.GetComponent<Rigidbody>();
             if (r != null)
             {
-                r.AddExplosionForce(1000, explosion.WorldSpacePosition, 50, 10, ForceMode.Impulse);
+                r.AddExplosionForce(explosionForce, explosion.WorldSpacePosition, 50, 10, ForceMode.Impulse);
             }
 
-            var cc = h.GetComponent<CharacterController>();
-            if (cc != null)
+            var tk = target.GetComponent<TakesKnockback>();
+            if (tk != null)
             {
-                ; // todo move character
+                var dir = target.transform.position - explosion.WorldSpacePosition;
+                var force = explosionForce;
+                var kb = dir.normalized * force;
+                Debug.Log("Applying knockback " + kb + " to player");
+                tk.AddKnockback(kb);
             }
         }
     }
