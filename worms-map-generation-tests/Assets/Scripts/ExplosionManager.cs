@@ -33,12 +33,12 @@ public class ExplosionManager : MonoBehaviour
                 r.AddExplosionForce(explosionForce, explosion.WorldSpacePosition, 50, 10, ForceMode.Impulse);
             }
 
-            var tk = target.GetComponent<TakesKnockback>();
+            var tk = target.GetComponent<CharacterMovement>();
             if (tk != null)
             {
                 var dir = target.transform.position - explosion.WorldSpacePosition;
                 var force = explosionForce;
-                var kb = dir.normalized * force;
+                var kb = dir.normalized * force / 300;
                 Debug.Log("Applying knockback " + kb + " to player");
                 tk.AddKnockback(kb);
             }

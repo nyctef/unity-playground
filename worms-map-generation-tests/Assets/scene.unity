@@ -592,7 +592,6 @@ GameObject:
   - component: {fileID: 1567319406}
   - component: {fileID: 1567319401}
   - component: {fileID: 1567319402}
-  - component: {fileID: 1567319403}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -629,6 +628,8 @@ MonoBehaviour:
   Speed: 40
   Gravity: {x: 0, y: -4, z: 0}
   MaxCoyoteTime: 0.1
+  KnockbackMass: 1
+  GroundedKnockbackBump: 0.5
   VertJumpForce: {x: 0, y: 2, z: 0}
   HorizontalJumpForce: {x: 1.5, y: 0.5, z: 0}
   GrenadePrefab: {fileID: 4349334486296318, guid: b557cd12eb9955c4b97c298578a81675,
@@ -651,19 +652,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e6581faf69bd62945a4fff18a64a8141, type: 2}
   - {fileID: 11400000, guid: cadeb04b70471814ca1f1e84d947c525, type: 2}
   CurrentFrame: 0
---- !u!114 &1567319403
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1567319399}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cbfb5d0b1890ab84e859608d2b67012d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CharacterMass: 1
-  Impact: {x: 0, y: 0, z: 0}
 --- !u!143 &1567319406
 CharacterController:
   m_ObjectHideFlags: 0

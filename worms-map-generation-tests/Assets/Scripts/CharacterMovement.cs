@@ -7,6 +7,8 @@ public class CharacterMovement : MonoBehaviour
     public float Speed = 1f;
     public Vector3 Gravity = new Vector3(0, -.981f);
     public float MaxCoyoteTime = 0.1f;
+    public float KnockbackMass = 1f;
+    public float GroundedKnockbackBump = 0.5f;
 
     public Vector3 VertJumpForce = new Vector3(0, 2f);
     public Vector3 HorizontalJumpForce = new Vector3(1.5f, 0.5f);
@@ -28,6 +30,20 @@ public class CharacterMovement : MonoBehaviour
     private bool _facingLeft;
 
     private string _currentAnimation;
+
+    public void AddKnockback(Vector3 direction)
+    {
+        Debug.Log("AddKnockback " + direction);
+        _fallingVelocity += direction / KnockbackMass;
+        if (_controller.isGrounded)
+        {
+            Debug.Log("knockback bump help");
+            // bump character to make sure they're not grounded any more
+            _controller.Move(new Vector3(0, _controller.minMoveDistance, 0));
+            // give them a little help off the ground
+            _fallingVelocity += new Vector3(0, GroundedKnockbackBump, 0);
+        }
+    }
 
     void Start()
     {
@@ -109,6 +125,11 @@ public class CharacterMovement : MonoBehaviour
         {
             _fallingVelocity.y = Math.Min(_fallingVelocity.y, 0);
         }
+        // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags CollisionFlags just doesn't have the attribute
+        else if ((_controller.collisionFlags & CollisionFlags.Below) != 0)
+        {
+            _fallingVelocity.y = 0;
+        }
 
         if (shouldFall)
         {
@@ -133,10 +154,10 @@ public class CharacterMovement : MonoBehaviour
         var newAnimation = Math.Abs(move.x) > 0.001 ? "Walk" : "Idle";
         SetAnimation(newAnimation);
 
-        //Debug.LogFormat(
-        //    "CharacterMovement {0:R} {1} move {2} fallingVelocity {3} coyoteTime {4} shouldFall {5} zCorrection {6} anim {7}",
-        //    transform.position.y, _controller.isGrounded ? "G" : "F", move.ToString("R"),
-        //    _fallingVelocity.ToString("R"), _coyoteTime, shouldFall, zCorrection, newAnimation);
+        Debug.LogFormat(
+            "CharacterMovement {0:R} {1} move {2} fallingVelocity {3} coyoteTime {4} shouldFall {5} zCorrection {6} anim {7}",
+            transform.position.y, _controller.isGrounded ? "G" : "F", move.ToString("R"),
+            _fallingVelocity.ToString("R"), _coyoteTime, shouldFall, zCorrection, newAnimation);
 
         _sprite.transform.localScale = FlipX(transform.localScale, _facingLeft);
 
