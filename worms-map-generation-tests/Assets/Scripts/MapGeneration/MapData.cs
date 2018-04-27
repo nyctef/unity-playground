@@ -49,6 +49,9 @@ public class MapData
         var pixelY = y % ChunkOffset;
         SetOnChunk(value, chunkX, chunkY, pixelX, pixelY);
 
+        // handle overlapping chunks
+        // TODO: Do we also need to set the value on diagonal chunks as well for corners?
+
         if (pixelX == 0 && chunkX > 0)
         {
             SetOnChunk(value, chunkX - 1, chunkY, 63, pixelY);
