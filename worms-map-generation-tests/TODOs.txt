@@ -1,5 +1,3 @@
-pull wavyislandmapgenerator apart some more / properly
-
 add some targets for explosions to hit
 
 apply damage on explosions
@@ -7,6 +5,14 @@ apply damage on explosions
 apply explosive force on explosions
 
 kill player/targets if they fall below a certain level
+
+power meter for grenades
+
+actually make a game:
+ - multiple player characters
+ - control multiple characters in sequence
+ - start a game / finish a game
+ - have some kind of menu state
 
 common system for projectiles/players for things that can die and trigger events when they do?
 
@@ -19,6 +25,8 @@ more cell automata stuff
 spawn player at an actual point on the map
 
 hide reticle when moving?
+
+pull wavyislandmapgenerator apart some more / properly
 
 map: once cell automata stuff is done then set remaining solid ground to texture values
 
