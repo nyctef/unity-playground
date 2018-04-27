@@ -81,7 +81,7 @@ public class CharacterMovement : MonoBehaviour
         }
 
         AimAngle += verticalInput * AimSpeed * (_facingLeft ? -1 : 1);
-        AimAngle %= 360;
+        AimAngle = Mathf.Clamp(AimAngle, -180, +180);
 
         // calculate "coyote time" - a small grace period to jump off ledges with
         if (_controller.isGrounded)
