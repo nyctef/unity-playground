@@ -6,6 +6,8 @@ kill player/targets if they fall below a certain level
 
 power meter for grenades
 
+move shared persistent settings things onto a scriptable object
+
 actually make a game:
  - multiple player characters
  - control multiple characters in sequence
