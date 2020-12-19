@@ -5,6 +5,7 @@ using UnityEngine;
 public class Graph : MonoBehaviour
 {
     public Transform pointPrefab = default;
+    public FunctionLibrary.FunctionName functionName = default;
 
     [Range(10, 100)]
     public int resolution = 10;
@@ -13,30 +14,36 @@ public class Graph : MonoBehaviour
 
     void Awake()
     {
-        points = new Transform[resolution];
-        var position = Vector3.zero;
-        var step = (points.Length / 2f);
+        Application.targetFrameRate = 60;
+
+        points = new Transform[resolution * resolution];
+        var step = (resolution / 2f);
         var scale = Vector3.one / step;
 
-        for (int i = 0; i < points.Length; i++)
-        {
-            Transform point = Instantiate(pointPrefab);
-            point.SetParent(transform, false);
-            position.x = (i + 0.5f) / step - 1f;
-            point.localPosition = position;
-            point.localScale = scale;
-            points[i] = point;
-        }
+        for (int x = 0; x < resolution; x++)
+            for (int z = 0; z < resolution; z++)
+            {
+                Transform point = Instantiate(pointPrefab);
+                point.SetParent(transform, false);
+                point.localScale = scale;
+                points[x * resolution + z] = point;
+            }
 
     }
 
     void Update()
     {
-        for (int i = 0; i < points.Length; i++)
-        {
-            var position = points[i].transform.localPosition;
-            position.y = Mathf.Sin(Mathf.PI * (position.x + Time.time));
-            points[i].transform.localPosition = position;
-        }
+        var f = FunctionLibrary.GetFunction(functionName);
+        for (int x = 0; x < resolution; x++)
+            for (int z = 0; z < resolution; z++)
+            {
+                var point = points[x * resolution + z];
+                var position = point.transform.localPosition;
+                var step = (resolution / 2f);
+                var u = (x + 0.5f) / step - 1f;
+                var v = (z + 0.5f) / step - 1f;
+                position = f(u, v, Time.time);
+                point.transform.localPosition = position;
+            }
     }
 }
