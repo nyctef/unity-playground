@@ -10,7 +10,12 @@ public class Graph : MonoBehaviour
     [Range(10, 100)]
     public int resolution = 10;
 
+    [Min(0f)]
+    public float functionDuration = 1f;
+
     Transform[] points;
+
+    float lastFunctionSwitch = 0;
 
     void Awake()
     {
@@ -32,6 +37,16 @@ public class Graph : MonoBehaviour
     }
 
     void Update()
+    {
+        while (Time.time - lastFunctionSwitch >= functionDuration)
+        {
+            lastFunctionSwitch += functionDuration;
+            functionName = FunctionLibrary.GetNext(functionName);
+        }
+        UpdateFunction();
+    }
+
+    private void UpdateFunction()
     {
         var f = FunctionLibrary.GetFunction(functionName);
         for (int x = 0; x < resolution; x++)

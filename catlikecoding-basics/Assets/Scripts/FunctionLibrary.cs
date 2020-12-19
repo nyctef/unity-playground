@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using static UnityEngine.Mathf;
+using System.Linq;
 
 public static class FunctionLibrary
 {
@@ -18,6 +19,16 @@ public static class FunctionLibrary
             case FunctionName.Torus: return Torus;
             default: throw new ArgumentException($"Unknown function name {name}", nameof(name));
         }
+    }
+    public static FunctionName GetNext(FunctionName prevName)
+    {
+        var values = Enum.GetValues(typeof(FunctionName)).Cast<FunctionName>().ToArray();
+        var currentIndex = Array.IndexOf(values, prevName);
+        if (currentIndex < 0)
+        {
+            throw new ArgumentException($"Unknown function name {prevName}", nameof(prevName));
+        }
+        return values[(currentIndex + 1) % values.Length];
     }
 
     public static Vector3 Wave(float x, float z, float t) => new Vector3(x, Sin(PI * (x + z + t)), z);
