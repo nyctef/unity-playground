@@ -7,7 +7,7 @@ public class GPUGraph : MonoBehaviour
 {
     public FunctionLibrary.FunctionName functionName = default;
 
-    [Range(10, 200)]
+    [Range(1, 1000)]
     public int resolution = 10;
 
     [Min(0f)]
@@ -61,12 +61,15 @@ public class GPUGraph : MonoBehaviour
         computeShader.SetFloat(timeId, Time.time);
         computeShader.SetBuffer(0, positionsId, positionsBuffer);
         var numGroups = CeilToInt(resolution / 8f);
+        // Debug.Log(numGroups);
         computeShader.Dispatch(0, numGroups, numGroups, 1);
 
         material.SetBuffer(positionsId, positionsBuffer);
-        material.SetFloat(stepId, 0.1f);
+        // TODO: this appears to provide nearly-accurate scaling for point objects, but it's unclear why
+        // just specifying `step` doesn't work (as the tutorial describes)
+        material.SetFloat(stepId, Sqrt(step));
 
-        var bounds = new Bounds(Vector3.zero, Vector3.one * (2f + (2f / resolution)));
+        var bounds = new Bounds(Vector3.zero, new Vector3(2f, 2f + 2f / resolution, 2f));
         Graphics.DrawMeshInstancedProcedural(mesh, 0, material, bounds, positionsBuffer.count);
     }
 }
