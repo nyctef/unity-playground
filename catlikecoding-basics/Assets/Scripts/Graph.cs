@@ -7,7 +7,7 @@ public class Graph : MonoBehaviour
     public Transform pointPrefab = default;
     public FunctionLibrary.FunctionName functionName = default;
 
-    [Range(10, 100)]
+    [Range(10, 200)]
     public int resolution = 10;
 
     [Min(0f)]
