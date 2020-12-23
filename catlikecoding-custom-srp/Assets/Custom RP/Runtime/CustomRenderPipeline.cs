@@ -5,6 +5,11 @@ using UnityEngine.Rendering;
 
 public class CustomRenderPipeline : RenderPipeline
 {
+    public CustomRenderPipeline()
+    {
+        GraphicsSettings.useScriptableRenderPipelineBatching = true;
+    }
+
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
         foreach (var camera in cameras)
