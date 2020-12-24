@@ -49,7 +49,13 @@ half4 frag (v2f i) : COLOR {
      //extract depth value and normal values
          DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, i.scrPos.xy), depthValue, normalValues);
     //float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.scrPos.xy);
-     float linearDepth = LinearEyeDepth(depthValue);
+    //float linearDepth = LinearEyeDepth(depthValue);
+
+    float clippingDistance = 1000;
+    float worldDepth = depthValue * clippingDistance;
+    //return worldDepth + _WorldSpaceCameraPos.z;
+    return (worldDepth + _WorldSpaceCameraPos.z)/5;
+     //return (_WorldSpaceCameraPos.z - linearDepth/1000);
      // return depthValue;
      //return float4(i.worldDirection, 1);
 
