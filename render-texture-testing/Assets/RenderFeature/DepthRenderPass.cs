@@ -42,8 +42,13 @@ class DepthRenderPass : ScriptableRenderPass
 
         cmd.BeginSample(profilerTag);
         var viewProjectInverseMatrix = (camera.projectionMatrix * camera.worldToCameraMatrix).inverse;
+        // ^^ this should work, but let's try a way from https://github.com/zezba9000/UnityMathReference/blob/master/Assets/Demos/Shaders/DepthBuffToWorldPos/DepthBuffToWorldPosDemo.cs
+
+        var clipToWorld = Matrix4x4.Inverse(GL.GetGPUProjectionMatrix(camera.projectionMatrix, true) * camera.worldToCameraMatrix);
+        Matrix4x4 ivp = Matrix4x4.Inverse((camera.projectionMatrix * camera.worldToCameraMatrix));
+
         //Debug.Log($"viewProjectInverseMatrix {viewProjectInverseMatrix}");
-        materialToBlit.SetMatrix("_ViewProjectInverse", viewProjectInverseMatrix);
+        materialToBlit.SetMatrix("_ViewProjectInverse", clipToWorld);
         cmd.Blit(BuiltinRenderTextureType.CameraTarget, renderTexture, materialToBlit);
         //cmd.Blit(tempTexture.Identifier(), cameraColor);
         cmd.EndSample(profilerTag);
