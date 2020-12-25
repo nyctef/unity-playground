@@ -16,11 +16,14 @@ CGPROGRAM
 // float _StartingTime;
 // float _showNormalColors = 0; //when this is 1, show normal values as colors. when 0, show depth values as colors.
  float4x4 _ViewProjectInverse;
+ float4x4 _CameraLocalToWorld;
+
+
+                const float Deg2Rad = (UNITY_PI * 2.0) / 360.0;
 
 struct v2f {
     float4 pos : SV_POSITION;
     float4 scrPos: TEXCOORD1;
-    float3 worldDirection: TEXCOORD2;
 };
 
 v2f vert (appdata_base v){
@@ -28,21 +31,24 @@ v2f vert (appdata_base v){
     o.pos =  UnityObjectToClipPos(v.vertex);
      o.scrPos = ComputeScreenPos(o.pos);
      o.scrPos.y = 1 - o.scrPos.y;
-     float4 clip = float4(o.pos.xy, 0, 1);
-     o.worldDirection = mul(_ViewProjectInverse, clip) - _WorldSpaceCameraPos;
     // TODO: Shader warning in 'Custom/DepthNormals': Use of UNITY_MATRIX_MV is detected. To transform a vertex into view space, consider using UnityObjectToViewPos for better performance.
     //o.ray.xyz = mul(UNITY_MATRIX_MV, v.vertex).xyz * float3(-1.0, -1.0, 1.0);
 
     return o;
 }
 
+float mod(float x, float y)
+{
+  return x - y * floor(x/y);
+}
+
 half4 frag (v2f i) : COLOR {
     
-   // return float4(1,0,1,1);
 
-   //return float4(i.ray.xyz, 1);
-
-   //return float4(1, 0.5, 1, 1);
+   float camHorizFov = 72; // TODO parameterize
+   // ratio between the width of the projected image and the distance from the camera
+   float camHorizFovRatio =  tan(Deg2Rad * (camHorizFov/2));
+   camHorizFovRatio = 1; // hack something about right
 
      float3 normalValues;
      float depthValue;
@@ -51,31 +57,46 @@ half4 frag (v2f i) : COLOR {
     //float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.scrPos.xy);
     //float linearDepth = LinearEyeDepth(depthValue);
 
+
     float clippingDistance = 1000;
     float worldDepth = depthValue * clippingDistance;
-    //return worldDepth + _WorldSpaceCameraPos.z;
-    return (worldDepth + _WorldSpaceCameraPos.z)/5;
-     //return (_WorldSpaceCameraPos.z - linearDepth/1000);
-     // return depthValue;
-     //return float4(i.worldDirection, 1);
+
+    //if (worldDepth > 5) return 0;
+
+    //return mul(_CameraLocalToWorld, float4(1, 0,0,1));
+
+    float x = (i.scrPos.x - 0.5) * worldDepth * camHorizFovRatio;
+    float y = (i.scrPos.y - 0.5) * worldDepth * camHorizFovRatio;
+
+    //return worldDepth;
+    float4 cameraspacePos = float4(x,y, worldDepth, 1);
+    float4 res = mul(_CameraLocalToWorld, cameraspacePos);
+    return float4(res.xyz, 1);
+
+    
+    return mod((worldDepth + _WorldSpaceCameraPos.z), 1);
+
+
+
+
 
      //float3 worldspace = i.worldDirection * linearDepth + _WorldSpaceCameraPos;
 
-     float4 pos;
+    //  float4 pos;
 
-    pos.x = (i.scrPos.x * 2.0f) - 1.0f;
-    pos.y = (i.scrPos.y * 2.0f - 1.0f);
-    pos.z = depthValue;
-    pos.w = 1.0f;
+    // pos.x = (i.scrPos.x * 2.0f) - 1.0f;
+    // pos.y = (i.scrPos.y * 2.0f - 1.0f);
+    // pos.z = depthValue;
+    // pos.w = 1.0f;
 
-    //float4x4 ivp = inverse(mul(UNITY_MATRIX_P,UNITY_MATRIX_V));
-    float4x4 ivp = _ViewProjectInverse;
-    pos = mul(ivp, pos );
-    pos /= pos.w;
+    // //float4x4 ivp = inverse(mul(UNITY_MATRIX_P,UNITY_MATRIX_V));
+    // float4x4 ivp = _ViewProjectInverse;
+    // pos = mul(ivp, pos );
+    // pos /= pos.w;
      
 
-    float4 color = float4(pos.xyz, 1.0);
-    return color/ 4;
+    // float4 color = float4(pos.xyz, 1.0);
+    // return color/ 4;
 
     // // one idea from https://forum.unity.com/threads/worldposition-from-depth-value.221115/#post-1475531
     //   float4 H = float4( i.scrPos.x, i.scrPos.y, linearDepth, 1.0f );

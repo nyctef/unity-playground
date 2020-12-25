@@ -49,6 +49,8 @@ class DepthRenderPass : ScriptableRenderPass
 
         //Debug.Log($"viewProjectInverseMatrix {viewProjectInverseMatrix}");
         materialToBlit.SetMatrix("_ViewProjectInverse", clipToWorld);
+        materialToBlit.SetMatrix("_CameraLocalToWorld", camera.transform.localToWorldMatrix);
+
         cmd.Blit(BuiltinRenderTextureType.CameraTarget, renderTexture, materialToBlit);
         //cmd.Blit(tempTexture.Identifier(), cameraColor);
         cmd.EndSample(profilerTag);
