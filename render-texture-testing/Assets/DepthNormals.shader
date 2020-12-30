@@ -23,12 +23,14 @@ CGPROGRAM
 
 struct v2f {
     float4 pos : SV_POSITION;
+    float4 wpos : TEXCOORD0;
     float4 scrPos: TEXCOORD1;
 };
 
 v2f vert (appdata_base v){
     v2f o;
     o.pos =  UnityObjectToClipPos(v.vertex);
+    o.wpos =  mul (unity_ObjectToWorld, v.vertex);
      o.scrPos = ComputeScreenPos(o.pos);
      o.scrPos.y = 1 - o.scrPos.y;
     // TODO: Shader warning in 'Custom/DepthNormals': Use of UNITY_MATRIX_MV is detected. To transform a vertex into view space, consider using UnityObjectToViewPos for better performance.
@@ -44,7 +46,7 @@ float mod(float x, float y)
 
 half4 frag (v2f i) : COLOR {
     
-
+    return i.wpos;
    float camHorizFov = 72; // TODO parameterize
    // ratio between the width of the projected image and the distance from the camera
    float camHorizFovRatio =  tan(Deg2Rad * (camHorizFov/2));
