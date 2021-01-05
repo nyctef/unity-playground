@@ -15,7 +15,7 @@ MonoBehaviour:
   m_Active: 1
   settings:
     passTag: RenderVirtualProps
-    Event: 300
+    Event: 1000
     filterSettings:
       RenderQueueType: 0
       LayerMask:
@@ -37,7 +37,7 @@ MonoBehaviour:
     cameraSettings:
       overrideCamera: 0
       restoreCamera: 1
-      offset: {x: 0, y: 0, z: 0, w: 0}
+      offset: {x: 0.45, y: 0, z: 0, w: 1}
       cameraFieldOfView: 60
 --- !u!114 &11400000
 MonoBehaviour:
