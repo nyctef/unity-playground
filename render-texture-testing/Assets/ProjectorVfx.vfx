@@ -195,7 +195,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"obj":{"fileID":8400000,"guid":"3102c5ec211edb84588c14ebc5858732","type":2}}'
+      m_SerializableObject: 
     min: -Infinity
     max: Infinity
     descendantCount: 0
@@ -1157,7 +1157,7 @@ VisualEffectResource:
       m_NamedObject:
         m_Array:
         - m_ExpressionIndex: 4
-          m_Value: {fileID: 8400000, guid: 3102c5ec211edb84588c14ebc5858732, type: 2}
+          m_Value: {fileID: 0}
         - m_ExpressionIndex: 31
           m_Value: {fileID: 10910, guid: 0000000000000000f000000000000000, type: 0}
       m_Bool:
