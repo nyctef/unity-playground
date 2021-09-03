@@ -194,6 +194,7 @@ GameObject:
   m_Component:
   - component: {fileID: 898115465}
   - component: {fileID: 898115464}
+  - component: {fileID: 898115466}
   m_Layer: 0
   m_Name: FPSPlayer
   m_TagString: Untagged
@@ -234,6 +235,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &898115466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 898115463}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f24a4f5eb3227b4d9c3aebae5375fc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: 12
 --- !u!1 &1250837147
 GameObject:
   m_ObjectHideFlags: 0
@@ -363,6 +377,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1233e00e7572674eba84b1fcc2210a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mouseSensitivity: 100
+  player: {fileID: 898115465}
 --- !u!43 &1301337778
 Mesh:
   m_ObjectHideFlags: 0
