@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class MouseLook : MonoBehaviour
 {
-    [Range(1f, 1000f)]
-    public float mouseSensitivity = 100f;
+    [Range(0.05f, 10f)]
+    public float mouseSensitivity = 0.1f;
 
     public Transform player;
 
@@ -21,8 +21,8 @@ public class MouseLook : MonoBehaviour
     void Update()
     {
         // TODO: look into using the new input system?
-        var mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        var mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        var mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity;
+        var mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
 
         upDownRotation += mouseY;
         upDownRotation = Mathf.Clamp(upDownRotation, -89f, 89f);
