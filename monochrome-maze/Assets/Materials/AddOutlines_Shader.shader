@@ -1,9 +1,12 @@
 Shader "Custom/AddOutlines_Shader"
 {
+    
     // The properties block of the Unity shader. In this example this block is empty
     // because the output color is predefined in the fragment shader code.
     Properties
-    { }
+    {
+        
+    }
 
     // The SubShader block containing the Shader code. 
     SubShader
@@ -16,6 +19,7 @@ Shader "Custom/AddOutlines_Shader"
         {
             // The HLSL code block. Unity SRP uses the HLSL language.
             HLSLPROGRAM
+            
             // This line defines the name of the vertex shader. 
             #pragma vertex vert
             // This line defines the name of the fragment shader. 
@@ -24,7 +28,17 @@ Shader "Custom/AddOutlines_Shader"
             // The Core.hlsl file contains definitions of frequently used HLSL
             // macros and functions, and also contains #include references to other
             // HLSL files (for example, Common.hlsl, SpaceTransforms.hlsl, etc.).
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"            
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"       
+
+            TEXTURE2D(_CameraColorTexture);
+            SAMPLER(sampler_CameraColorTexture);
+            float4 _CameraColorTexture_TexelSize;
+
+            TEXTURE2D(_CameraDepthTexture);
+            SAMPLER(sampler_CameraDepthTexture);
+
+            TEXTURE2D(_CameraDepthNormalsTexture);
+            SAMPLER(sampler_CameraDepthNormalsTexture);     
 
             // The structure definition defines which variables it contains.
             // This example uses the Attributes structure as an input structure in
@@ -33,14 +47,16 @@ Shader "Custom/AddOutlines_Shader"
             {
                 // The positionOS variable contains the vertex positions in object
                 // space.
-                float4 positionOS   : POSITION;                 
+                float4 positionOS   : POSITION;
+                float2 uv               : TEXCOORD0;
             };
 
             struct Varyings
             {
                 // The positions in this struct must have the SV_POSITION semantic.
                 float4 positionHCS  : SV_POSITION;
-            };            
+                float2 uv : TEXCOORD0;
+            };
 
             // The vertex shader definition with properties defined in the Varyings 
             // structure. The type of the vert function must match the type (struct)
@@ -52,16 +68,18 @@ Shader "Custom/AddOutlines_Shader"
                 // The TransformObjectToHClip function transforms vertex positions
                 // from object space to homogenous space
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.uv = IN.uv;
                 // Returning the output.
                 return OUT;
             }
 
             // The fragment shader definition.            
-            half4 frag() : SV_Target
+            half4 frag(Varyings IN) : SV_Target
             {
                 // Defining the color variable and returning it.
                 half4 customColor;
-                customColor = half4(0.5, 0, 0, 1);
+                // customColor = half4(0.5, 0, 0, 1);
+                customColor = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, IN.uv);
                 return customColor;
             }
             ENDHLSL
