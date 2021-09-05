@@ -96,14 +96,10 @@ Shader "Custom/AddOutlines_Shader"
                 depthDist += abs(Depth(leftPixel) - Depth(IN.uv));
                 depthDist += abs(Depth(bottomPixel) - Depth(IN.uv));
 
-                // float fogDepth = clamp((Depth(IN.uv)), 0, 1);
+                // TODO: see if we can use proper spherical distance at some point
+                // since this fog suffers from the frustrum shape problem
                 float fogDepth = Linear01Depth(Depth(IN.uv), _ZBufferParams) * 3;
                 fogDepth = clamp(fogDepth, 0, 1);
-
-                // float cameraDist = length(IN.positionCS);
-                // return lerp(baseColor, cameraDist / 30, 0.6);
-
-                // return half4(normalDist, depthDist, 0, 0);
 
                 if (normalDist > 0.01) {
                     baseColor = 0;
