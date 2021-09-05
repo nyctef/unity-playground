@@ -1,20 +1,15 @@
 Shader "Custom/AddOutlines_Shader"
 {
     
-    // The properties block of the Unity shader. In this example this block is empty
-    // because the output color is predefined in the fragment shader code.
     Properties
     {
-        
+        // _MainTex gets populated with the render result up to this point
+	    [HideInInspector]_MainTex ("Base (RGB)", 2D) = "white" {}
     }
 
     // The SubShader block containing the Shader code. 
     SubShader
     {
-        // SubShader Tags define when and under which conditions a SubShader block or
-        // a pass is executed.
-        Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalRenderPipeline" }
-
         Pass
         {
             // The HLSL code block. Unity SRP uses the HLSL language.
@@ -30,9 +25,8 @@ Shader "Custom/AddOutlines_Shader"
             // HLSL files (for example, Common.hlsl, SpaceTransforms.hlsl, etc.).
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"       
 
-            TEXTURE2D(_CameraColorTexture);
-            SAMPLER(sampler_CameraColorTexture);
-            float4 _CameraColorTexture_TexelSize;
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
 
             TEXTURE2D(_CameraDepthTexture);
             SAMPLER(sampler_CameraDepthTexture);
@@ -79,7 +73,7 @@ Shader "Custom/AddOutlines_Shader"
                 // Defining the color variable and returning it.
                 half4 customColor;
                 // customColor = half4(0.5, 0, 0, 1);
-                customColor = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, IN.uv);
+                customColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
                 return customColor;
             }
             ENDHLSL
