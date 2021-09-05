@@ -27,6 +27,7 @@ Shader "Custom/AddOutlines_Shader"
 
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
+            float4 _MainTex_TexelSize;
 
             TEXTURE2D(_CameraDepthTexture);
             SAMPLER(sampler_CameraDepthTexture);
@@ -52,29 +53,60 @@ Shader "Custom/AddOutlines_Shader"
                 float2 uv : TEXCOORD0;
             };
 
-            // The vertex shader definition with properties defined in the Varyings 
-            // structure. The type of the vert function must match the type (struct)
-            // that it returns.
+            float3 DecodeNormal(float4 enc)
+            {
+                // TODO: see if we can just get a proper normals texture instead of using CameraDepthNormals
+                float kScale = 1.7777;
+                float3 nn = enc.xyz*float3(2*kScale,2*kScale,0) + float3(-kScale,-kScale,1);
+                float g = 2.0 / dot(nn.xyz,nn.xyz);
+                float3 n;
+                n.xy = g*nn.xy;
+                n.z = g-1;
+                return n;
+            }
+
+            float Depth(float2 uv) { return SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture, uv); }
+            float3 Normal(float2 uv) { return DecodeNormal(SAMPLE_TEXTURE2D(_CameraDepthNormalsTexture, sampler_CameraDepthNormalsTexture, uv)); }
+
             Varyings vert(Attributes IN)
             {
-                // Declaring the output object (OUT) with the Varyings struct.
                 Varyings OUT;
-                // The TransformObjectToHClip function transforms vertex positions
-                // from object space to homogenous space
+
+                // TODO: the shader just goes black if we don't include this step - why?
+                // we're not using the position at all.
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
                 OUT.uv = IN.uv;
-                // Returning the output.
+
                 return OUT;
             }
 
             // The fragment shader definition.            
             half4 frag(Varyings IN) : SV_Target
             {
-                // Defining the color variable and returning it.
-                half4 customColor;
-                // customColor = half4(0.5, 0, 0, 1);
-                customColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
-                return customColor;
+                half4 baseColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
+
+                float2 leftPixel = IN.uv - (float2(1, 0) * _MainTex_TexelSize.xy);
+                float2 bottomPixel = IN.uv + (float2(0, 1) * _MainTex_TexelSize.xy);
+
+                float normalDist = 0;
+                normalDist += length(Normal(leftPixel) - Normal(IN.uv));
+                normalDist += length(Normal(bottomPixel) - Normal(IN.uv));
+
+                float depthDist = 0; 
+                depthDist += abs(Depth(leftPixel) - Depth(IN.uv));
+                depthDist += abs(Depth(bottomPixel) - Depth(IN.uv));
+
+                // return half4(normalDist, depthDist, 0, 0);
+
+                if (normalDist > 0.01) {
+                    baseColor = 0;
+                }
+
+                if (depthDist > 0.01) {
+                    baseColor = 0;
+                }
+
+                return baseColor;
             }
             ENDHLSL
         }
