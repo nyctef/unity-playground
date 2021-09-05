@@ -23,7 +23,7 @@ Shader "Custom/AddOutlines_Shader"
             // The Core.hlsl file contains definitions of frequently used HLSL
             // macros and functions, and also contains #include references to other
             // HLSL files (for example, Common.hlsl, SpaceTransforms.hlsl, etc.).
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"       
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
@@ -48,8 +48,10 @@ Shader "Custom/AddOutlines_Shader"
 
             struct Varyings
             {
-                // The positions in this struct must have the SV_POSITION semantic.
+                // Even though we don't directly use the position in clip space, the
+                // shader needs to produce it so that the GPU knows how and where to run the fragment shader (?)
                 float4 positionHCS  : SV_POSITION;
+                // uv gives us screen coordinates
                 float2 uv : TEXCOORD0;
             };
 
@@ -72,8 +74,6 @@ Shader "Custom/AddOutlines_Shader"
             {
                 Varyings OUT;
 
-                // TODO: the shader just goes black if we don't include this step - why?
-                // we're not using the position at all.
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
                 OUT.uv = IN.uv;
 
@@ -96,6 +96,13 @@ Shader "Custom/AddOutlines_Shader"
                 depthDist += abs(Depth(leftPixel) - Depth(IN.uv));
                 depthDist += abs(Depth(bottomPixel) - Depth(IN.uv));
 
+                // float fogDepth = clamp((Depth(IN.uv)), 0, 1);
+                float fogDepth = Linear01Depth(Depth(IN.uv), _ZBufferParams) * 3;
+                fogDepth = clamp(fogDepth, 0, 1);
+
+                // float cameraDist = length(IN.positionCS);
+                // return lerp(baseColor, cameraDist / 30, 0.6);
+
                 // return half4(normalDist, depthDist, 0, 0);
 
                 if (normalDist > 0.01) {
@@ -106,7 +113,7 @@ Shader "Custom/AddOutlines_Shader"
                     baseColor = 0;
                 }
 
-                return baseColor;
+                return lerp(baseColor, half4(0.3, 0.25, 0.25, 1), fogDepth);
             }
             ENDHLSL
         }
